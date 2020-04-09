@@ -1,1 +1,9 @@
 .vs/
+bin/Debug/
+bin/Release/win32
+bin/Intermediate/
+
+*.iobj
+*.ipdb
+*.pdb
+*.exe
