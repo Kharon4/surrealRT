@@ -11,8 +11,12 @@ class window {
 private:
 	HWND windowHandle = NULL;
 public:
-	window(HINSTANCE hInstance, int nCmdShow, LPCWSTR title, short X, short Y);
-	~window();
 	short x, y;
 	LPCWSTR Title;
+	BYTE* data;//BGR
+	
+	window(HINSTANCE hInstance, int nCmdShow, LPCWSTR title, short X, short Y);
+	~window();
+
+	void draw();//time consuming
 };

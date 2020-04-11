@@ -9,10 +9,16 @@ int Main() {
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
-	//enableConsole();
+	enableConsole();
+	int x = 800, y = 600;
+	window w1(hInstance, nCmdShow, L"hello world", x, y);
+
+	for (int i = 0; i < x * y; ++i) {
+		w1.data[i * 3 + 2] = 255;
+	}
+	w1.draw();
 	
-	window w1(hInstance, nCmdShow, L"hello world", 800, 600);
-	window w2(hInstance, nCmdShow, L"another hello world", 800, 600);
+	
 	system("pause");
 	return 0;
 }
