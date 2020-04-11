@@ -9,8 +9,11 @@ int Main() {
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
-	enableConsole();
+	//enableConsole();
 	
+	{
+		window w1(hInstance, nCmdShow, L"hello world", 800, 600);
+	}
 	system("pause");
 	return 0;
 }
