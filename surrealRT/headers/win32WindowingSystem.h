@@ -5,6 +5,7 @@ bool enableConsole();
 void disableConsole();
 bool setConsoleState(bool enabled);
 
+#pragma comment (lib,"Gdiplus.lib")
 
 class window {
 private:

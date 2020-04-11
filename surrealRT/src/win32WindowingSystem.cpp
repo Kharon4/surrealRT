@@ -3,6 +3,10 @@
 #include <iostream>
 #include <thread>
 
+#include<gdiplus.h>
+#include<gdiplusheaders.h>
+
+
 //console functions
 bool enableConsole() {
 	if (!AllocConsole())return true;//error
@@ -28,6 +32,18 @@ bool setConsoleState(bool enabled) {
 }
 
 
+class gdiInitializer {
+public:
+	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+	ULONG_PTR gdiplusToken;
+	gdiInitializer() {
+		Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+	}
+	~gdiInitializer() {
+		Gdiplus::GdiplusShutdown(gdiplusToken);
+	}
+} globlaGDI;
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 void createWindowInternal(HINSTANCE hInstance, int nCmdShow, window* val , HWND* out) {
@@ -45,7 +61,7 @@ void createWindowInternal(HINSTANCE hInstance, int nCmdShow, window* val , HWND*
 		0,                              // Optional window styles.
 		CLASS_NAME,                     // Window class
 		val->Title,    // Window text
-		WS_OVERLAPPEDWINDOW,            // Window style
+		WS_OVERLAPPED|WS_SYSMENU,            // Window style
 		// Size and position
 		CW_USEDEFAULT, CW_USEDEFAULT, val->x, val->y,
 		NULL,       // Parent window    
