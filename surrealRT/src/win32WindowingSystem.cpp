@@ -2,11 +2,13 @@
 
 #include <iostream>
 #include <thread>
+#include<chrono>
+#include<map>
 
 #include<gdiplus.h>
 #include<gdiplusheaders.h>
 
-#include<map>
+
 
 std::map <HWND, window*> handleWindowMap;
 
@@ -35,17 +37,26 @@ bool setConsoleState(bool enabled) {
 }
 
 
-class gdiInitializer {
+class Initializer {
 public:
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR gdiplusToken;
-	gdiInitializer() {
+	Initializer() {
 		Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+		for (int i = 0; i < 256; ++i) {
+				input::isDown[i] = false;
+				input::pressed[i] = false;
+				input::released[i] = false;
+				input::go[i] = false;
+				input::end[i] = false;
+		}
+		input::update();
+		input::update();
 	}
-	~gdiInitializer() {
+	~Initializer() {
 		Gdiplus::GdiplusShutdown(gdiplusToken);
 	}
-} globlaGDI;
+} globlalInitializere;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
@@ -152,4 +163,101 @@ void window::draw() {
 	DeleteObject(hbmp);
 
 	ReleaseDC(windowHandle, hdc);
+}
+
+POINT window::GlobalToScreen(POINT global) { ScreenToClient(windowHandle, &global); return global; }
+POINT window::ScreenToGlobal(POINT screen) { ClientToScreen(windowHandle, &screen); return screen; }
+
+unsigned long long input::millis(){
+	uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+	return ms;
+}
+
+bool input::released[256];
+bool input::isDown[256];
+bool input::pressed[256];
+bool input::go[256];
+bool input::end[256];
+
+unsigned long long input::time;
+
+long int input::lockX, input::lockY;
+long int input::mouseX, input::mouseY;
+long int input::changeX, input::changeY;
+
+bool input::lock = false;
+double input::deltaTime = 0;
+
+input::input() {
+	for (int i = 0; i < 256; ++i) {
+		isDown[i] = false;
+		pressed[i] = false;
+		released[i] = false;
+		go[i] = false;
+		end[i] = false;
+	}
+	time = millis();
+}
+
+void input::hideCursor() {
+	(ShowCursor(NULL));
+}
+
+void input::showCursor() {
+	ShowCursor(true);
+}
+
+void input::update() {
+	//update keyboard stuff
+
+	for (int i = 0; i < 256; ++i) {
+		bool temp = GetAsyncKeyState(i);
+		//go
+		if (temp && isDown[i])go[i] = true;
+		else go[i] = false;
+		//end
+		if (!temp && !isDown[i])end[i] = true;
+		else end[i] = false;
+
+		isDown[i] = temp;
+
+
+
+		if (!pressed[i] && isDown[i] && !go[i]) {
+			pressed[i] = true;
+		}
+		else {
+			pressed[i] = false;
+		}
+
+		if (!released[i] && !isDown[i] && !end[i]) {
+			released[i] = true;
+		}
+		else {
+			released[i] = false;
+		}
+
+	}
+
+	//update mouse stuff
+
+	POINT p;
+	GetCursorPos(&p);
+	changeX = p.x - mouseX;
+	changeY = p.y - mouseY;
+	mouseX = p.x;
+	mouseY = p.y;
+	
+	if (lock) {
+		SetCursorPos(lockX, lockY);
+		GetCursorPos(&p);
+		mouseX = p.x;
+		mouseY = p.y;
+	}
+
+	//get deltatime
+	long long temp = millis();
+	time = temp - time;
+	deltaTime = time / 1000.0;
+	time = temp;
 }
