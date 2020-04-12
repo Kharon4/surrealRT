@@ -29,6 +29,9 @@
     <ClInclude Include="headers\rendering.cuh" />
     <ClInclude Include="headers\chromaticShader.cuh" />
     <ClInclude Include="headers\camera.cuh" />
+    <ClInclude Include="headers\mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\rendering.cu" />
