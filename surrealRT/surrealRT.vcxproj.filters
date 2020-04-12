@@ -26,5 +26,13 @@
     <ClInclude Include="headers\win32WindowingSystem.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\rendering.cuh" />
+    <ClInclude Include="headers\chromaticShader.cuh" />
+    <ClInclude Include="headers\camera.cuh" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\rendering.cu" />
+    <CudaCompile Include="src\chromaticShader.cu" />
+    <CudaCompile Include="src\camera.cu" />
   </ItemGroup>
 </Project>

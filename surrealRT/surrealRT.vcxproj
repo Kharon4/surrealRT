@@ -25,7 +25,15 @@
     <None Include=".gitignore" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="headers\camera.cuh" />
+    <ClInclude Include="headers\chromaticShader.cuh" />
+    <ClInclude Include="headers\rendering.cuh" />
     <ClInclude Include="headers\win32WindowingSystem.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="src\camera.cu" />
+    <CudaCompile Include="src\chromaticShader.cu" />
+    <CudaCompile Include="src\rendering.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
