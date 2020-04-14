@@ -1,4 +1,8 @@
 #pragma once
-class mesh {
 
+#include "chromaticShader.cuh"
+
+struct mesh {
+	vec3d pts[3];
+	chromaticShader* colShader;
 };
