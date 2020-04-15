@@ -8,8 +8,6 @@ struct color {
 };
 
 struct shaderMask {
-	bool dr;//dr of ray
-	bool pt;//pt of contact
 	bool camCoord;//camera coordinates
 	bool surfaceNormal;//normal of contact surface
 };
@@ -26,8 +24,6 @@ public:
 	shaderMask sm;
 	__device__ chromaticShader() {
 		sm.camCoord = false;
-		sm.dr = false;
-		sm.pt = false;
 		sm.surfaceNormal = false;
 	}
 	__device__ ~chromaticShader(){}
@@ -43,3 +39,22 @@ public:
 	__device__ color shade(shaderData& sd) { return c; }
 };
 
+
+class skybox :public chromaticShader {
+public:
+	color up;
+	color down;
+
+	__device__ skybox(color Up, color Down) { up = Up; down = Down; }
+	__device__ skybox(){}
+	__device__ color shade(shaderData& sd) {
+		float ratio = vec3d::dot(sd.dr, vec3d(0, 0, 1))/sd.dr.mag();
+		ratio += 1;
+		ratio /= 2;
+		color rVal;
+		rVal.r = up.r * ratio + down.r * (1 - ratio);
+		rVal.g = up.g * ratio + down.g * (1 - ratio);
+		rVal.b = up.b * ratio + down.b * (1 - ratio);
+		return rVal;
+	}
+};
