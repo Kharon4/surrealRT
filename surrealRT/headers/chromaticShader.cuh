@@ -46,15 +46,27 @@ class skybox :public chromaticShader {
 public:
 	color up;
 	color down;
-
-	__device__ skybox(color Up, color Down) { up = Up; down = Down; }
+	color xp;
+	color xn;
+	color yp;
+	color yn;
+	__device__ skybox(color Up, color Down, color XP, color XN, color YP, color YN) { up = Up; down = Down; xp = XP; xn = XN; yp = YP; yn = YN; }
 	__device__ skybox(){}
 	__device__ color shade(shaderData& sd) {
-		float ratio = vec3d::dot(sd.dr, vec3d(0, 0, 1))/sd.dr.mag();
+		float m = sd.dr.mag();
+		float ratio = sd.dr.z/m;
 		ratio += 1;
 		ratio /= 2;
 		color rVal;
 		rVal = up * ratio + down * (1 - ratio);
+		ratio = sd.dr.x / m;
+		ratio += 1;
+		ratio /= 2;
+		rVal += xp * ratio + xn * (1 - ratio);
+		ratio = sd.dr.y / m;
+		ratio += 1;
+		ratio /= 2;
+		rVal += yp * ratio + yn * (1 - ratio);
 		return rVal;
 	}
 };

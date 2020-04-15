@@ -25,10 +25,11 @@ void getIntersections(linearMathD::line * rays , mesh ** intersections , size_t 
 }
 
 __global__
-void shadeKernel(mesh** interactions, color* data, chromaticShader** defaultShader , size_t maxNo) {
+void shadeKernel(mesh** interactions,linearMathD::line* rays, color* data, chromaticShader** defaultShader , size_t maxNo) {
 	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 	if (tId >= maxNo)return;
 	shaderData df;
+	df.dr = rays[tId].getDr();
 	if (interactions[tId] == nullptr)data[tId] = (*defaultShader)->shade(df);
 }
 
@@ -52,11 +53,15 @@ void getByteColor(color* data, colorBYTE* dataByte, float min, float delta, size
 
 __global__
 void createShader(chromaticShader ** ptr){
-	color c;
+	color c,down,red;
 	c.x = 0;
 	c.y = 100;
 	c.z = 200;
-	*ptr = new solidColor(c);
+	down.x = 0;
+	down.y = 0;
+	down.z = 0;
+	red.x = 100;
+	*ptr = new skybox(c,down,red,down,down,down);
 }
 
 __global__
@@ -82,7 +87,7 @@ void render(camera cam,BYTE *data) {
 	createShader<<<1,1>>>(sc);
 	color* Data;
 	cudaMalloc(&Data, sizeof(color) * cam.sc.resX * cam.sc.resY);
-	shadeKernel << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (intersections, Data, sc, cam.sc.resX * cam.sc.resY);
+	shadeKernel << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (intersections,rays, Data, sc, cam.sc.resX * cam.sc.resY);
 	colorBYTE *DataByte;
 	cudaMalloc(&DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY);
 	getByteColor << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (Data, DataByte, 0, 256, cam.sc.resX * cam.sc.resY);

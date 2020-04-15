@@ -10,9 +10,11 @@
 #include "vec3.cuh"
 #include<vector>
 
+#define pi 3.14159
+
 namespace manipulation3dD {//double precision
 
-	static const float pi = 3.14159;
+	
 
 	__device__ __host__ double toDeg(double rad);
 	__device__ __host__ double toRad(double deg);
