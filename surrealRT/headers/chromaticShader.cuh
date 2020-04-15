@@ -3,7 +3,9 @@
 
 #include "vec3.cuh"
 
-struct color {
+typedef vec3f color;//x=r , y=g , z=b
+
+struct colorBYTE {
 	BYTE b, g, r;
 };
 
@@ -33,7 +35,7 @@ public:
 class solidColor : public chromaticShader {
 public:
 	color c;
-	__device__ solidColor() { c.r = 0; c.b = 0; c.g = 0; }
+	__device__ solidColor() { c.x = 0; c.y = 0; c.z = 0; }
 	__device__ solidColor(color C) { c = C; }
 	__device__ ~solidColor() {}
 	__device__ color shade(shaderData& sd) { return c; }
@@ -52,9 +54,7 @@ public:
 		ratio += 1;
 		ratio /= 2;
 		color rVal;
-		rVal.r = up.r * ratio + down.r * (1 - ratio);
-		rVal.g = up.g * ratio + down.g * (1 - ratio);
-		rVal.b = up.b * ratio + down.b * (1 - ratio);
+		rVal = up * ratio + down * (1 - ratio);
 		return rVal;
 	}
 };

@@ -33,15 +33,30 @@ void shadeKernel(mesh** interactions, color* data, chromaticShader** defaultShad
 }
 
 __global__
+void getByteColor(color* data, colorBYTE* dataByte, float min, float delta, size_t noThreads) {
+	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+	if (tId >= noThreads)return;
+	color rval = data[tId];
+	rval -= vec3f(min, min, min);
+	rval *= 256 / delta;
+	if (rval.x > 255)dataByte[tId].r = 255;
+	else if (rval.x < 0)dataByte[tId].r = 0;
+	else dataByte[tId].r = (unsigned char)rval.x;
+	if (rval.y > 255)dataByte[tId].g = 255;
+	else if (rval.y < 0)dataByte[tId].g = 0;
+	else dataByte[tId].g = (unsigned char)rval.y;
+	if (rval.z > 255)dataByte[tId].b = 255;
+	else if (rval.z < 0)dataByte[tId].b = 0;
+	else dataByte[tId].b = (unsigned char)rval.z;
+}
+
+__global__
 void createShader(chromaticShader ** ptr){
 	color c;
-	c.r = 0;
-	c.g = 100;
-	c.b = 200;
+	c.x = 0;
+	c.y = 100;
+	c.z = 200;
 	*ptr = new solidColor(c);
-	//ptr->c.r = 0;
-	//ptr->c.g = 100;
-	//ptr->c.b = 200;
 }
 
 __global__
@@ -50,36 +65,32 @@ void deleteShader(chromaticShader** ptr)
 	delete (*ptr);
 }
 
+void displayCudaError() {
+	cudaDeviceSynchronize();
+	std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
+}
 
 void render(camera cam,BYTE *data) {
 	linearMathD::line * rays;
 	cudaMalloc(&rays, sizeof(linearMathD::line) * cam.sc.resX * cam.sc.resY);
-	//std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
 	initRays<<<threadNo , blockNo(cam.sc.resX*cam.sc.resY)>>>(cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
-	//std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
 	mesh** intersections;
 	cudaMalloc(&intersections, sizeof(mesh*) * cam.sc.resX * cam.sc.resY);
-	//std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
 	getIntersections << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (rays, intersections, cam.sc.resX * cam.sc.resY);
-	//std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
 	chromaticShader** sc;
 	cudaMalloc(&sc, sizeof(chromaticShader*));
 	createShader<<<1,1>>>(sc);
 	color* Data;
 	cudaMalloc(&Data, sizeof(color) * cam.sc.resX * cam.sc.resY);
-	cudaDeviceSynchronize();
-	std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
 	shadeKernel << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (intersections, Data, sc, cam.sc.resX * cam.sc.resY);
-
+	colorBYTE *DataByte;
+	cudaMalloc(&DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY);
+	getByteColor << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (Data, DataByte, 0, 256, cam.sc.resX * cam.sc.resY);
+	cudaMemcpy(data, DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY, cudaMemcpyKind::cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
-	std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
-	deleteShader<<<1,1>>>(sc);
-	cudaDeviceSynchronize();
-	std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
-	cudaDeviceSynchronize();
-	std::cout << cudaGetErrorName(cudaMemcpy(data, Data, sizeof(color) * cam.sc.resX * cam.sc.resY, cudaMemcpyKind::cudaMemcpyDeviceToHost))<<std::endl;
-	cudaDeviceSynchronize();
+	cudaFree(DataByte);
 	cudaFree(Data);
+	deleteShader << <1, 1 >> > (sc);
 	cudaFree(sc);
 	cudaFree(intersections);
 	cudaFree(rays);
