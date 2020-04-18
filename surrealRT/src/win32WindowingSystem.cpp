@@ -200,11 +200,11 @@ input::input() {
 }
 
 void input::hideCursor() {
-	(ShowCursor(NULL));
+	(ShowCursor(FALSE));
 }
 
 void input::showCursor() {
-	ShowCursor(true);
+	ShowCursor(TRUE);
 }
 
 void input::update() {

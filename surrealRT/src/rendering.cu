@@ -4,6 +4,14 @@
 #define threadNo 1024
 #define blockNo(Threads) Threads/threadNo
 
+struct intersectionParam{
+	short camX, camY;
+	double lambda;
+	vec3d pt;
+	mesh* mesh;
+	meshConstrained* meshConstrained;
+};
+
 
 __global__
 void initRays(short xRes , short yRes , vec3d vertex , vec3d topLeft , vec3d right , vec3d down , linearMathD::line * rays) {
@@ -15,6 +23,21 @@ void initRays(short xRes , short yRes , vec3d vertex , vec3d topLeft , vec3d rig
 	y = tId / yRes;
 
 	rays[tId].setRaw_s(vertex, vec3d::subtract(vec3d::add(topLeft, vec3d::add(vec3d::multiply(right, (x + 0.5) / xRes), vec3d::multiply(down, (y + 0.5) / yRes))), vertex));
+}
+
+__device__ __host__ void calculateMeshConstraints(mesh* Mesh , meshConstrained *meshC){
+	vec3d plNormal = vec3d::cross(Mesh->pts[1] - Mesh->pts[0], Mesh->pts[2] - Mesh->pts[0]);
+	meshC->planeNormal = plNormal;
+	meshC->sidePlaneNormals[0] = vec3d::cross(plNormal, Mesh->pts[1] - Mesh->pts[0]);
+	meshC->sidePlaneNormals[1] = vec3d::cross(plNormal, Mesh->pts[2] - Mesh->pts[1]);
+	meshC->sidePlaneNormals[2] = vec3d::cross(plNormal, Mesh->pts[0] - Mesh->pts[2]);
+}
+
+__global__
+void initMesh(mesh* Mesh, meshConstrained* meshC, size_t noOfThreads) {
+	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+	if (tId >= noOfThreads)return;
+	calculateMeshConstraints(Mesh + tId, meshC + tId);
 }
 
 __global__
@@ -54,13 +77,13 @@ void getByteColor(color* data, colorBYTE* dataByte, float min, float delta, size
 __global__
 void createShader(chromaticShader ** ptr){
 	color c,down,red;
-	c.x = 0;
+	c.x = -255;
 	c.y = 100;
 	c.z = 200;
-	down.x = 0;
+	down.x = -255;
 	down.y = 0;
 	down.z = 0;
-	red.x = 100;
+	red.x = 700;
 	*ptr = new skybox(c,down,red,down,down,down);
 }
 

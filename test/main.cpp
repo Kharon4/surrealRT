@@ -12,11 +12,14 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 	if (input::isDown['X'])return false;
 	if (input::pressed['M']) {
 		input::lock = !input::lock;
+		if (input::lock);
+		else input::showCursor();
 		input::lockX = input::mouseX;
 		input::lockY = input::mouseY;
 	}
 
 	if (input::lock) {
+		input::hideCursor();
 		t.CS.setAngle(t.CS.getAngle() + vec3d(rSpeed * input::changeX, rSpeed * input::changeY, 0)*input::deltaTime);
 		rOnly.CS.setAngle(t.CS.getAngle() + vec3d(rSpeed * input::changeX, rSpeed * input::changeY, 0)*input::deltaTime);
 	}
@@ -26,7 +29,7 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
-	enableConsole();
+	//enableConsole();
 	int x = 800, y = 600;
 	window w1(hInstance, nCmdShow, L"hello world", x, y);
 	for (int i = 0; i < x * y; ++i) {
