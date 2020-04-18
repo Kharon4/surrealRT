@@ -3,7 +3,7 @@
 #define math3D_DeclrationOnly 1
 
 #include "win32WindowingSystem.h"
-#include "rendering.cuh"
+#include "rotation.h"
 
 bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
 	float rSpeed = -0.1;
@@ -32,8 +32,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	for (int i = 0; i < x * y; ++i) {
 		w1.data[i * 3 + 2] = 255;
 	}
+	w1.draw();
 
-
+	system("pause");
+	
+	
+	
+	/*
 	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, 1));
 	manipulation3dD::transform t , tDr;
 	t.CS.setOrigin(c.vertex);
@@ -49,7 +54,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	while (updateCam(t,tDr)) {
 		render(c, w1.data);
 		w1.draw();
-	}
+	}*/
 	
 	
 	return 0;
