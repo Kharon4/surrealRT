@@ -163,13 +163,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CPURTX\src\camera.cpp" />
+    <ClCompile Include="CPURTX\src\mesh.cpp" />
+    <ClCompile Include="CPURTX\src\rayTrace.cpp" />
     <ClCompile Include="CPURTX\src\win32WindowingSystem.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPURTX\headers\camera.h" />
+    <ClInclude Include="CPURTX\headers\light.h" />
     <ClInclude Include="CPURTX\headers\mesh.h" />
+    <ClInclude Include="CPURTX\headers\rayTrace.h" />
     <ClInclude Include="CPURTX\headers\win32WindowingSystem.h" />
+    <ClInclude Include="CPURTX\testCases\testCase0.h" />
+    <ClInclude Include="CPURTX\testCases\testCaseSphere.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

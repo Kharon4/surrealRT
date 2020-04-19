@@ -24,6 +24,12 @@
     <ClCompile Include="CPURTX\src\camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="CPURTX\src\mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CPURTX\src\rayTrace.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CPURTX\headers\win32WindowingSystem.h">
@@ -33,6 +39,18 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CPURTX\headers\mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPURTX\headers\rayTrace.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPURTX\testCases\testCase0.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPURTX\testCases\testCaseSphere.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CPURTX\headers\light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

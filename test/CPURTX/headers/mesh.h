@@ -3,14 +3,20 @@
 
 struct triangle {
 	vec3d* pts[3];
+	vec3f reflectivity;
+	vec3f transminivity;
+	vec3f diffuseRefelctivity;
+	float refractiveIndex;
 };
 
 
 //can be modified
-class colltriangle {
+class collTriangle {
 public:
-
+	collTriangle() {}
+	collTriangle(const triangle & t);
+	void calc(const triangle& t);
 	linearMathD::plane collPlane;
-	vec3d s[2];
+	linearMathD::plane sidePlanes[3];
 };
 
