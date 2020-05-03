@@ -10,6 +10,7 @@ bool setConsoleState(bool enabled);
 class window {
 private:
 	HWND windowHandle = NULL;
+	bool closed = false;
 public:
 	short x, y;
 	LPCWSTR Title;
@@ -19,6 +20,8 @@ public:
 	~window();
 
 	void draw();//time consuming
+
+	bool  isWindowClosed();
 
 	POINT GlobalToScreen(POINT global);
 	POINT ScreenToGlobal(POINT screen);

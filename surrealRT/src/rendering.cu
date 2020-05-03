@@ -1,17 +1,11 @@
 #include "rendering.cuh"
 #include <iostream>
 
-#define threadNo 1024
-#define blockNo(Threads) Threads/threadNo
+#define threadNo 32
+#define blockNo(Threads) ((Threads/threadNo) + 1)
 
-struct intersectionParam{
-	short camX, camY;
-	double lambda;
-	vec3d pt;
-	mesh* mesh;
-	meshConstrained* meshConstrained;
-};
 
+#define _enableDebug 0
 
 __global__
 void initRays(short xRes , short yRes , vec3d vertex , vec3d topLeft , vec3d right , vec3d down , linearMathD::line * rays) {
@@ -40,21 +34,58 @@ void initMesh(mesh* Mesh, meshConstrained* meshC, size_t noOfThreads) {
 	calculateMeshConstraints(Mesh + tId, meshC + tId);
 }
 
-__global__
-void getIntersections(linearMathD::line * rays , mesh ** intersections , size_t noRays) {
-	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
-	if (tId >= noRays)return;
-	intersections[tId] = nullptr;
+__device__ __host__
+void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMathD::line ray, size_t noTrs,  meshShaded * &OUTmesh, meshConstrained * &OUTMeshC , double& OUTlambda, vec3d& OUTpt) {
+	OUTmesh = nullptr;
+	OUTMeshC = nullptr;
+	OUTlambda = -1;
+	double tempDist;
+	for (size_t i = 0; i < noTrs; ++i) {
+		linearMathD::intersectionLambdaRaw_s(ray, linearMathD::plane(Mesh[i].M.pts[0], meshC[i].planeNormal), tempDist);
+		//check for visibility
+		if (tempDist > 0 && (tempDist < OUTlambda || OUTlambda < 0)) {
+			//check for inside
+			vec3d pt = linearMathD::getPt(ray, tempDist);
+			if (vec3d::dot(pt - Mesh[i].M.pts[0], meshC[i].sidePlaneNormals[0]) < 0)continue;
+			if (vec3d::dot(pt - Mesh[i].M.pts[1], meshC[i].sidePlaneNormals[1]) < 0)continue;
+			if (vec3d::dot(pt - Mesh[i].M.pts[2], meshC[i].sidePlaneNormals[2]) < 0)continue;
+			//inside
+			OUTlambda = tempDist;
+
+			OUTpt = pt;
+			OUTmesh = Mesh + i;
+			OUTMeshC = meshC + i;
+		}
+	}
 }
 
 __global__
-void shadeKernel(mesh** interactions,linearMathD::line* rays, color* data, chromaticShader** defaultShader , size_t maxNo) {
+void getIntersections(linearMathD::line * rays, size_t noRays,meshShaded*trs , meshConstrained*collTrs, size_t noTrs,color* displayData, chromaticShader** defaultShader) {
+	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+	if (tId >= noRays)return;
+
+	fragmentProperties fp;
+	meshShaded *outM;
+	meshConstrained* outCM;
+	getClosestIntersection(trs, collTrs, rays[tId], noTrs,outM,outCM,fp.ip.lambda,fp.ip.pt);
+	fp.ray = rays[tId];
+	//shade
+	if (outM == nullptr)displayData[tId] = (*defaultShader)->shade(fp);
+	else displayData[tId] = outM->colShader->shade(fp);
+
+
+}
+
+/*
+__device__
+void shade(color* data, chromaticShader** defaultShader) {
 	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 	if (tId >= maxNo)return;
 	shaderData df;
 	df.dr = rays[tId].getDr();
 	if (interactions[tId] == nullptr)data[tId] = (*defaultShader)->shade(df);
 }
+*/
 
 __global__
 void getByteColor(color* data, colorBYTE* dataByte, float min, float delta, size_t noThreads) {
@@ -94,32 +125,39 @@ void deleteShader(chromaticShader** ptr)
 }
 
 void displayCudaError() {
+#if _enableDebug
 	cudaDeviceSynchronize();
 	std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
+#else
+
+#endif
 }
 
 void render(camera cam,BYTE *data) {
 	linearMathD::line * rays;
 	cudaMalloc(&rays, sizeof(linearMathD::line) * cam.sc.resX * cam.sc.resY);
-	initRays<<<threadNo , blockNo(cam.sc.resX*cam.sc.resY)>>>(cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
-	mesh** intersections;
-	cudaMalloc(&intersections, sizeof(mesh*) * cam.sc.resX * cam.sc.resY);
-	getIntersections << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (rays, intersections, cam.sc.resX * cam.sc.resY);
+	initRays<<<blockNo(cam.sc.resX*cam.sc.resY), threadNo >>>(cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
+	displayCudaError();
 	chromaticShader** sc;
 	cudaMalloc(&sc, sizeof(chromaticShader*));
-	createShader<<<1,1>>>(sc);
+	createShader << <1, 1 >> > (sc);
+	displayCudaError();
 	color* Data;
 	cudaMalloc(&Data, sizeof(color) * cam.sc.resX * cam.sc.resY);
-	shadeKernel << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (intersections,rays, Data, sc, cam.sc.resX * cam.sc.resY);
+	displayCudaError();
+	getIntersections << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (rays, cam.sc.resX * cam.sc.resY,nullptr,nullptr,0,Data,sc);
+	displayCudaError();
 	colorBYTE *DataByte;
 	cudaMalloc(&DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY);
-	getByteColor << <threadNo, blockNo(cam.sc.resX * cam.sc.resY) >> > (Data, DataByte, 0, 256, cam.sc.resX * cam.sc.resY);
+	getByteColor << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (Data, DataByte, 0, 256, cam.sc.resX * cam.sc.resY);
+	displayCudaError();
 	cudaMemcpy(data, DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY, cudaMemcpyKind::cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
 	cudaFree(DataByte);
 	cudaFree(Data);
 	deleteShader << <1, 1 >> > (sc);
+	displayCudaError();
 	cudaFree(sc);
-	cudaFree(intersections);
 	cudaFree(rays);
+	displayCudaError();
 }

@@ -29,7 +29,9 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
-	//enableConsole();
+#if _enableDebug
+	enableConsole();
+#endif
 	int x = 800, y = 600;
 	window w1(hInstance, nCmdShow, L"hello world", x, y);
 	for (int i = 0; i < x * y; ++i) {
@@ -49,7 +51,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	t.addVec(c.sc.screenCenter, &c.sc.screenCenter);
 	tDr.addVec(c.sc.halfRight, &c.sc.halfRight);
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
-	while (updateCam(t,tDr)) {
+	while (updateCam(t,tDr)&& (!w1.isWindowClosed())) {
 		render(c, w1.data);
 		w1.draw();
 	}

@@ -1,10 +1,9 @@
 #pragma once
 
-#include "chromaticShader.cuh"
+#include "vec3.cuh"
 
 struct mesh {
 	vec3d pts[3];
-	chromaticShader* colShader;
 };
 
 struct meshConstrained {

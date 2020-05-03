@@ -60,7 +60,7 @@ public:
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-void createWindowInternal(HINSTANCE hInstance, int nCmdShow, window* val , HWND* out) {
+void createWindowInternal(HINSTANCE hInstance, int nCmdShow, window* val , HWND* out,bool *closed) {
 	// Register the window class.
 	const wchar_t CLASS_NAME[] = L"Window Class";
 	WNDCLASS wc = { };
@@ -99,6 +99,8 @@ void createWindowInternal(HINSTANCE hInstance, int nCmdShow, window* val , HWND*
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
+	*closed = true;
 }
 
 window::window(HINSTANCE hInstance, int nCmdShow, LPCWSTR title, short X, short Y) {
@@ -106,7 +108,7 @@ window::window(HINSTANCE hInstance, int nCmdShow, LPCWSTR title, short X, short 
 	y = Y;
 	Title = title;
 	data = new BYTE[x * y * 3];
-	std::thread t(createWindowInternal, hInstance, nCmdShow, this, &windowHandle);
+	std::thread t(createWindowInternal, hInstance, nCmdShow, this, &windowHandle,&closed);
 	t.detach();
 }
 
@@ -167,6 +169,8 @@ void window::draw() {
 
 POINT window::GlobalToScreen(POINT global) { ScreenToClient(windowHandle, &global); return global; }
 POINT window::ScreenToGlobal(POINT screen) { ClientToScreen(windowHandle, &screen); return screen; }
+
+bool window::isWindowClosed() { return closed; }
 
 unsigned long long input::millis(){
 	uint64_t ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
