@@ -32,10 +32,12 @@
     <ClInclude Include="headers\mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="headers\cudaRelated\commonMemory.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\rendering.cu" />
     <CudaCompile Include="src\chromaticShader.cu" />
     <CudaCompile Include="src\camera.cu" />
+    <CudaCompile Include="headers\cudaRelated\commonMemory.cu" />
   </ItemGroup>
 </Project>

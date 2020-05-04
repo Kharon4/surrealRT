@@ -27,6 +27,7 @@
   <ItemGroup>
     <ClInclude Include="headers\camera.cuh" />
     <ClInclude Include="headers\chromaticShader.cuh" />
+    <ClInclude Include="headers\cudaRelated\commonMemory.cuh" />
     <ClInclude Include="headers\mesh.h" />
     <ClInclude Include="headers\rendering.cuh" />
     <ClInclude Include="headers\win32WindowingSystem.h" />
@@ -34,6 +35,7 @@
   <ItemGroup>
     <CudaCompile Include="src\camera.cu" />
     <CudaCompile Include="src\chromaticShader.cu" />
+    <CudaCompile Include="headers\cudaRelated\commonMemory.cu" />
     <CudaCompile Include="src\rendering.cu" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
