@@ -6,6 +6,7 @@
 
 template <typename T>
 commonMemory<T>::commonMemory(size_t Size, commonMemType Type) {
+	noElements = Size;
 	size = sizeof(T) * Size;
 	type = Type;
 	if (size == 0)return;
@@ -18,21 +19,32 @@ commonMemory<T>::commonMemory(size_t Size, commonMemType Type) {
 }
 
 template <typename T>
-T* commonMemory<T>::getHost() {
+size_t commonMemory<T>::getNoElements() {
+	return noElements;
+}
+
+template <typename T>
+T* commonMemory<T>::getHost(bool* OUTupdated) {
+	if (OUTupdated != nullptr)*OUTupdated = false;
+
 	if (type == deviceOnly)return (T*)nullptr;
 	if (!hostUpdated && type == both) {
 		cudaMemcpy(hostPtr, devicePtr, size, cudaMemcpyKind::cudaMemcpyDeviceToHost);
 		hostUpdated = true;
+		if (OUTupdated != nullptr)*OUTupdated = true;
 	}
 	return (T*)hostPtr;
 }
 
 template <typename T>
-T* commonMemory<T>::getDevice() {
+T* commonMemory<T>::getDevice(bool* OUTupdated) {
+	if (OUTupdated != nullptr)*OUTupdated = false;
+
 	if (type == hostOnly)return (T*)nullptr;
 	if (hostUpdated && type == both) {
 		cudaMemcpy(devicePtr, hostPtr, size, cudaMemcpyKind::cudaMemcpyHostToDevice);
 		hostUpdated = false;
+		if (OUTupdated != nullptr)*OUTupdated = true;
 	}
 	return (T*)devicePtr;
 }

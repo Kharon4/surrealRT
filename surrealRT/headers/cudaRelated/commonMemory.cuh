@@ -7,6 +7,7 @@ private:
 	void* hostPtr = nullptr;
 	void* devicePtr = nullptr;
 	bool hostUpdated = true;
+	size_t noElements;
 	size_t size;
 	commonMemType type;
 public:
@@ -14,9 +15,10 @@ public:
 	__host__
 	commonMemory(size_t Size = 1, commonMemType Type = commonMemType::both);
 
-	T* getHost();
+	size_t getNoElements();
 
-	T* getDevice();
+	T* getHost(bool* OUTupdated = nullptr);//OUTupdated = true when data is copied
+	T* getDevice(bool* OUTupdated = nullptr);//OUTupdated = true when data is copied
 
 	__host__
 	~commonMemory();

@@ -161,3 +161,7 @@ void render(camera cam,BYTE *data) {
 	cudaFree(rays);
 	displayCudaError();
 }
+
+
+void graphicalWorld::render(camera cam, BYTE* data) {
+}
