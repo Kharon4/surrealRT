@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include "linearMath.cuh"
 #include "mesh.h"
+#include "GPUInstantiator.cuh"
 
 typedef vec3f color;//x=r , y=g , z=b
 
@@ -27,6 +28,10 @@ public:
 	__device__ virtual color shade(fragmentProperties& sd) { return color{ 0,0,0 }; }
 };
 
+
+
+//more types
+
 class solidColor : public chromaticShader {
 public:
 	color c;
@@ -35,6 +40,19 @@ public:
 	__device__ ~solidColor() {}
 	__device__ color shade(fragmentProperties& sd) { return c; }
 };
+
+typedef CPUInstanceController<chromaticShader, solidColor, color> solidColCPU;
+
+#ifdef __NVCC__
+
+int f() {
+	color c;
+	solidColCPU shader(c);
+	shader.getGPUPtr();
+	return c.x;
+}
+#endif // __NVCC__
+
 
 
 class skybox :public chromaticShader {
@@ -66,7 +84,8 @@ public:
 	}
 };
 
+
 struct meshShaded {
 	mesh M;
-	chromaticShader* colShader;
+	chromaticShader* colShader = nullptr;
 };

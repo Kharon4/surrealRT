@@ -28,10 +28,10 @@ __device__ __host__ void calculateMeshConstraints(mesh* Mesh , meshConstrained *
 }
 
 __global__
-void initMesh(mesh* Mesh, meshConstrained* meshC, size_t noOfThreads) {
+void initMesh(meshShaded* Mesh, meshConstrained* meshC, size_t noOfThreads) {
 	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 	if (tId >= noOfThreads)return;
-	calculateMeshConstraints(Mesh + tId, meshC + tId);
+	calculateMeshConstraints(&((Mesh + tId)->M), meshC + tId);
 }
 
 __device__ __host__
@@ -72,8 +72,6 @@ void getIntersections(linearMathD::line * rays, size_t noRays,meshShaded*trs , m
 	//shade
 	if (outM == nullptr)displayData[tId] = (*defaultShader)->shade(fp);
 	else displayData[tId] = outM->colShader->shade(fp);
-
-
 }
 
 /*
@@ -124,6 +122,18 @@ void deleteShader(chromaticShader** ptr)
 	delete (*ptr);
 }
 
+namespace dontAccess {
+	__global__
+	void createDefaultShader(chromaticShader** ptr) {
+		color c;
+		c.x = 100;
+		c.y = 0;
+		c.z = 100;
+		*ptr = new solidColor(c);
+	}
+}
+
+
 void displayCudaError() {
 #if _enableDebug
 	cudaDeviceSynchronize();
@@ -133,7 +143,7 @@ void displayCudaError() {
 #endif
 }
 
-void render(camera cam,BYTE *data) {
+void Render(camera cam,BYTE *data, meshShaded * meshS , meshConstrained * meshC , size_t noTrs) {
 	linearMathD::line * rays;
 	cudaMalloc(&rays, sizeof(linearMathD::line) * cam.sc.resX * cam.sc.resY);
 	initRays<<<blockNo(cam.sc.resX*cam.sc.resY), threadNo >>>(cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
@@ -145,7 +155,7 @@ void render(camera cam,BYTE *data) {
 	color* Data;
 	cudaMalloc(&Data, sizeof(color) * cam.sc.resX * cam.sc.resY);
 	displayCudaError();
-	getIntersections << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (rays, cam.sc.resX * cam.sc.resY,nullptr,nullptr,0,Data,sc);
+	getIntersections << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (rays, cam.sc.resX * cam.sc.resY,meshS,meshC,noTrs,Data,sc);
 	displayCudaError();
 	colorBYTE *DataByte;
 	cudaMalloc(&DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY);
@@ -164,4 +174,10 @@ void render(camera cam,BYTE *data) {
 
 
 void graphicalWorld::render(camera cam, BYTE* data) {
+	bool updated=false;
+	meshShaded* devPtr = meshS->getDevice(&updated);
+	if(updated){
+		initMesh<<<blockNo(meshS->getNoElements()),threadNo>>>(devPtr, meshC->getDevice(), meshS->getNoElements());
+	}
+	Render(cam, data, meshS->getDevice(), meshC->getDevice(), meshS->getNoElements());
 }

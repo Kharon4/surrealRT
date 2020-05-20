@@ -32,8 +32,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 #if _enableDebug
 	enableConsole();
 #endif
-	int x = 800, y = 600;
-	window w1(hInstance, nCmdShow, L"hello world", x, y);
+	int x = 1080, y = 720;
+	window w1(hInstance, nCmdShow, L"test window", x, y);
 	for (int i = 0; i < x * y; ++i) {
 		w1.data[i * 3 + 2] = 255;
 	}
@@ -51,8 +51,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	t.addVec(c.sc.screenCenter, &c.sc.screenCenter);
 	tDr.addVec(c.sc.halfRight, &c.sc.halfRight);
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
+	commonMemory<meshShaded> temp(1);
+	temp.getHost()->M.pts[0] = vec3d(-5, 0, -1);
+	temp.getHost()->M.pts[1] = vec3d(5, 0, -1);
+	temp.getHost()->M.pts[2] = vec3d(5, 5, -1);
+	color testColor;
+	testColor.y = 255;
+	solidColCPU col(testColor);
+	temp.getHost()->colShader = col.getGPUPtr();
+	
+	graphicalWorld world(&temp);
 	while (updateCam(t,tDr)&& (!w1.isWindowClosed())) {
-		render(c, w1.data);
+		world.render(c, w1.data);
 		w1.draw();
 	}
 	
