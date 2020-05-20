@@ -22,20 +22,25 @@ void GPUDeleteInstance(parentClass** mem) {
 template <typename parentClass, typename childClass, typename... args>
 class CPUInstanceController {
 private:
-	parentClass** ptrToPtrToCClass = nullptr;
 	parentClass* ptrToCClass = nullptr;
 public:
 	CPUInstanceController(args... constructorArgs) {
+		parentClass** ptrToPtrToCClass = nullptr;
 		cudaMalloc(&ptrToPtrToCClass, sizeof(parentClass*));
 		GPUCreateInstance<parentClass, childClass, args...> << <1, 1 >> > (ptrToPtrToCClass, constructorArgs...);
 		cudaDeviceSynchronize();
 		cudaMemcpy(&ptrToCClass, ptrToPtrToCClass, sizeof(parentClass*), cudaMemcpyKind::cudaMemcpyDeviceToHost);
 		cudaDeviceSynchronize();
+		cudaFree(ptrToPtrToCClass);
 	}
 
 	parentClass* getGPUPtr() { return ptrToCClass; }
 
 	~CPUInstanceController() {
+		parentClass** ptrToPtrToCClass = nullptr;
+		cudaMalloc(&ptrToPtrToCClass, sizeof(parentClass*));
+		cudaMemcpy(ptrToPtrToCClass,&ptrToCClass, sizeof(parentClass*), cudaMemcpyKind::cudaMemcpyHostToDevice);
+		cudaDeviceSynchronize();
 		GPUDeleteInstance<parentClass> << <1, 1 >> > (ptrToPtrToCClass);
 		cudaFree(ptrToPtrToCClass);
 	}
