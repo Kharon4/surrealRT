@@ -60,7 +60,7 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMat
 }
 
 __global__
-void getIntersections(linearMathD::line * rays, size_t noRays,meshShaded*trs , meshConstrained*collTrs, size_t noTrs,color* displayData, chromaticShader** defaultShader) {
+void getIntersections(linearMathD::line * rays, size_t noRays,meshShaded*trs , meshConstrained*collTrs, size_t noTrs,color* displayData, chromaticShader* defaultShader) {
 	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 	if (tId >= noRays)return;
 
@@ -70,20 +70,10 @@ void getIntersections(linearMathD::line * rays, size_t noRays,meshShaded*trs , m
 	getClosestIntersection(trs, collTrs, rays[tId], noTrs,outM,outCM,fp.ip.lambda,fp.ip.pt);
 	fp.ray = rays[tId];
 	//shade
-	if (outM == nullptr)displayData[tId] = (*defaultShader)->shade(fp);
+	if (outM == nullptr)displayData[tId] = (defaultShader)->shade(fp);
 	else displayData[tId] = outM->colShader->shade(fp);
 }
 
-/*
-__device__
-void shade(color* data, chromaticShader** defaultShader) {
-	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
-	if (tId >= maxNo)return;
-	shaderData df;
-	df.dr = rays[tId].getDr();
-	if (interactions[tId] == nullptr)data[tId] = (*defaultShader)->shade(df);
-}
-*/
 
 __global__
 void getByteColor(color* data, colorBYTE* dataByte, float min, float delta, size_t noThreads) {
@@ -103,24 +93,6 @@ void getByteColor(color* data, colorBYTE* dataByte, float min, float delta, size
 	else dataByte[tId].b = (unsigned char)rval.z;
 }
 
-__global__
-void createShader(chromaticShader ** ptr){
-	color c,down,red;
-	c.x = -255;
-	c.y = 100;
-	c.z = 200;
-	down.x = -255;
-	down.y = 0;
-	down.z = 0;
-	red.x = 700;
-	*ptr = new skybox(c,down,red,down,down,down);
-}
-
-__global__
-void deleteShader(chromaticShader** ptr)
-{
-	delete (*ptr);
-}
 
 namespace dontAccess {
 	__global__
@@ -148,14 +120,12 @@ void Render(camera cam,BYTE *data, meshShaded * meshS , meshConstrained * meshC 
 	cudaMalloc(&rays, sizeof(linearMathD::line) * cam.sc.resX * cam.sc.resY);
 	initRays<<<blockNo(cam.sc.resX*cam.sc.resY), threadNo >>>(cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
 	displayCudaError();
-	chromaticShader** sc;
-	cudaMalloc(&sc, sizeof(chromaticShader*));
-	createShader << <1, 1 >> > (sc);
+	skyboxCPU defaultShader(color(0, 0, 128), color(), color(75,0,0), color(), color(), color());
 	displayCudaError();
 	color* Data;
 	cudaMalloc(&Data, sizeof(color) * cam.sc.resX * cam.sc.resY);
 	displayCudaError();
-	getIntersections << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (rays, cam.sc.resX * cam.sc.resY,meshS,meshC,noTrs,Data,sc);
+	getIntersections << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (rays, cam.sc.resX * cam.sc.resY,meshS,meshC,noTrs,Data,defaultShader.getGPUPtr());
 	displayCudaError();
 	colorBYTE *DataByte;
 	cudaMalloc(&DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY);
@@ -165,9 +135,7 @@ void Render(camera cam,BYTE *data, meshShaded * meshS , meshConstrained * meshC 
 	cudaDeviceSynchronize();
 	cudaFree(DataByte);
 	cudaFree(Data);
-	deleteShader << <1, 1 >> > (sc);
 	displayCudaError();
-	cudaFree(sc);
 	cudaFree(rays);
 	displayCudaError();
 }
