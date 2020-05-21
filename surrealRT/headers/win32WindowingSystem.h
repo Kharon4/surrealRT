@@ -16,7 +16,10 @@ private:
 
 	std::mutex drawLock;
 
-	HBITMAP drawHBMP;
+	HBITMAP hbmp0,hbmp1;
+
+	HBITMAP* dHBMP;
+	HBITMAP* sHBMP;
 
 public:
 	short x, y;

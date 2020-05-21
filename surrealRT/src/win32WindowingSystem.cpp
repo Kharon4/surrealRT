@@ -108,6 +108,12 @@ window::window(HINSTANCE hInstance, int nCmdShow, LPCWSTR title, short X, short 
 	y = Y;
 	Title = title;
 	data = new BYTE[x * y * 3];
+
+	dHBMP = nullptr;
+	sHBMP = nullptr;
+
+	dHBMP = &hbmp0;
+	sHBMP = &hbmp1;
 	std::thread t(createWindowInternal, hInstance, nCmdShow, this, &windowHandle,&closed);
 	t.detach();
 }
@@ -130,6 +136,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
 window::~window() {
 	SendMessage(windowHandle, WM_DESTROY,0,0);
 	delete[] data;
+	DeleteObject(*dHBMP);
+	DeleteObject(*sHBMP);
 }
 
 
@@ -150,11 +158,11 @@ void window::draw() {
 	
 	drawLock.lock();
 	//converts the hBitmap into the correct form
-	HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, drawHBMP);//save old contents
+	HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, *sHBMP);//save old contents
 	
 	//store the data about the hBitmap into a structure
 	BITMAP bm;
-	GetObject(drawHBMP, sizeof(bm), &bm);
+	GetObject(*sHBMP, sizeof(bm), &bm);
 
 	//BitBlt
 	BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
@@ -174,12 +182,17 @@ void window::update() {
 	//bitmap with the data
 	Gdiplus::Bitmap bmp(x, y, 4 * ((x * 24 + 31) / 32), PixelFormat24bppRGB, data);//
 	
-	drawLock.lock();
 	//delete hBitmap
-	DeleteObject(drawHBMP);//
+	DeleteObject(*dHBMP);//
 	//get hBitmap from bitmap
 	Gdiplus::Color backgroundCol(0, 0, 0);//
-	bmp.GetHBITMAP(backgroundCol, &drawHBMP);//
+	bmp.GetHBITMAP(backgroundCol, dHBMP);//
+
+	//invert d and s HBMP
+	drawLock.lock();
+	HBITMAP* tempPtr = sHBMP;
+	sHBMP = dHBMP;
+	dHBMP = tempPtr;
 	drawLock.unlock();
 	draw();
 }
