@@ -6,7 +6,7 @@
 #include "rendering.cuh"
 
 bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
-	float rSpeed = -0.1;
+	float rSpeed = -0.01;
 	
 	input::update();
 	if (input::isDown['X'])return false;
@@ -29,14 +29,16 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 }
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
-#if _enableDebug
+
 	enableConsole();
-#endif
 	int x = 800, y = 600;
 	window w1(hInstance, nCmdShow, L"test window", x, y);
 	for (int i = 0; i < x * y; ++i) {
-		w1.data[i * 3 + 2] = 255;
+		w1.data[i * 3 + 0] = 70;
+		w1.data[i * 3 + 1] = 0;
+		w1.data[i * 3 + 2] = 70;
 	}
+	w1.update();
 
 
 	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y)/x));
@@ -63,7 +65,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	graphicalWorld world(&temp);
 	while (updateCam(t,tDr)&& (!w1.isWindowClosed())) {
 		world.render(c, w1.data);
-		w1.draw();
+		w1.update();
 	}
 	
 	

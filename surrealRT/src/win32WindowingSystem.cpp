@@ -145,39 +145,43 @@ void window::draw() {
 	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeNone);
 	graphics.SetInterpolationMode(Gdiplus::InterpolationMode::InterpolationModeDefault);
 
-	//bitmap with the data
-	Gdiplus::Bitmap bmp(x, y, 4 * ((x * 24 + 31) / 32), PixelFormat24bppRGB, data);//
-
-	//device cependant bitmap
-	HBITMAP hbmp;//
-
-	//get hBitmap from bitmap
-	Gdiplus::Color backgroundCol(0, 0, 0);//
-	bmp.GetHBITMAP(backgroundCol, &hbmp);//
-
 	//get compatible DC for window 
 	HDC hdcMem = CreateCompatibleDC(hdc);
 	
+	drawLock.lock();
 	//converts the hBitmap into the correct form
-	HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmp);//save old contents
+	HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, drawHBMP);//save old contents
 	
 	//store the data about the hBitmap into a structure
 	BITMAP bm;
-	GetObject(hbmp, sizeof(bm), &bm);
+	GetObject(drawHBMP, sizeof(bm), &bm);
 
 	//BitBlt
 	BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
 
 	//restore old content
 	SelectObject(hdcMem, hbmOld);
-	
+	drawLock.unlock();
+
 	//delete compatible DC
 	DeleteDC(hdcMem);
-	//delete hBitmap
-	DeleteObject(hbmp);//
 
 	//draw completed relaease window DC
 	ReleaseDC(windowHandle, hdc);
+}
+
+void window::update() {
+	//bitmap with the data
+	Gdiplus::Bitmap bmp(x, y, 4 * ((x * 24 + 31) / 32), PixelFormat24bppRGB, data);//
+	
+	drawLock.lock();
+	//delete hBitmap
+	DeleteObject(drawHBMP);//
+	//get hBitmap from bitmap
+	Gdiplus::Color backgroundCol(0, 0, 0);//
+	bmp.GetHBITMAP(backgroundCol, &drawHBMP);//
+	drawLock.unlock();
+	draw();
 }
 
 POINT window::GlobalToScreen(POINT global) { ScreenToClient(windowHandle, &global); return global; }

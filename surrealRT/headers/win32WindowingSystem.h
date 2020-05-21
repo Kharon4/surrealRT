@@ -1,5 +1,7 @@
 #pragma once
 #include <Windows.h>
+#include <mutex>
+
 
 bool enableConsole();
 void disableConsole();
@@ -11,6 +13,11 @@ class window {
 private:
 	HWND windowHandle = NULL;
 	bool closed = false;
+
+	std::mutex drawLock;
+
+	HBITMAP drawHBMP;
+
 public:
 	short x, y;
 	LPCWSTR Title;
@@ -19,7 +26,9 @@ public:
 	window(HINSTANCE hInstance, int nCmdShow, LPCWSTR title, short X, short Y);
 	~window();
 
-	void draw();//time consuming
+	void draw();//non time consuming
+
+	void update();//time consuming
 
 	bool  isWindowClosed();
 

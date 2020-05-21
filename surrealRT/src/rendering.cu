@@ -93,19 +93,6 @@ void getByteColor(color* data, colorBYTE* dataByte, float min, float delta, size
 	else dataByte[tId].b = (unsigned char)rval.z;
 }
 
-
-namespace dontAccess {
-	__global__
-	void createDefaultShader(chromaticShader** ptr) {
-		color c;
-		c.x = 100;
-		c.y = 0;
-		c.z = 100;
-		*ptr = new solidColor(c);
-	}
-}
-
-
 void displayCudaError() {
 #if _enableDebug
 	cudaDeviceSynchronize();
@@ -120,7 +107,8 @@ void Render(camera cam,BYTE *data, meshShaded * meshS , meshConstrained * meshC 
 	cudaMalloc(&rays, sizeof(linearMathD::line) * cam.sc.resX * cam.sc.resY);
 	initRays<<<blockNo(cam.sc.resX*cam.sc.resY), threadNo >>>(cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
 	displayCudaError();
-	skyboxCPU defaultShader(color(0, 0, 128), color(), color(75,0,0), color(), color(), color());
+	//skyboxCPU defaultShader(color(0, 0, 128), color(-200,-200,-200), color(150,0,0), color(0,0,64), color(0,0,64), color(0,0,64));
+	solidColCPU defaultShader(color(0, 0, 0));
 	displayCudaError();
 	color* Data;
 	cudaMalloc(&Data, sizeof(color) * cam.sc.resX * cam.sc.resY);
