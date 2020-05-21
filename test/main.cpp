@@ -32,14 +32,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 #if _enableDebug
 	enableConsole();
 #endif
-	int x = 1080, y = 720;
+	int x = 800, y = 600;
 	window w1(hInstance, nCmdShow, L"test window", x, y);
 	for (int i = 0; i < x * y; ++i) {
 		w1.data[i * 3 + 2] = 255;
 	}
 
 
-	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, 1));
+	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y)/x));
 	manipulation3dD::transform t , tDr;
 	t.CS.setOrigin(c.vertex);
 	t.CS.setScale(vec3d(1, 1, 1));
@@ -52,11 +52,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	tDr.addVec(c.sc.halfRight, &c.sc.halfRight);
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
 	commonMemory<meshShaded> temp(1);
-	temp.getHost()->M.pts[0] = vec3d(-5, 0, -1);
-	temp.getHost()->M.pts[1] = vec3d(5, 0, -1);
-	temp.getHost()->M.pts[2] = vec3d(5, 5, -1);
+	temp.getHost()->M.pts[0] = vec3d(-1, 0, -1);
+	temp.getHost()->M.pts[1] = vec3d(1, 0, -1);
+	temp.getHost()->M.pts[2] = vec3d(1, 5, -1);
 	color testColor;
-	testColor.y = 255;
+	testColor.z = 255;
 	solidColCPU col(testColor);
 	temp.getHost()->colShader = col.getGPUPtr();
 	

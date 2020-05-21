@@ -44,8 +44,7 @@ public:
 typedef CPUInstanceController<chromaticShader, solidColor, color> solidColCPU;
 
 #ifdef __NVCC__
-
-int f() {
+int fSolicCol() {
 	color c;
 	solidColCPU shader(c);
 	shader.getGPUPtr();
@@ -83,6 +82,16 @@ public:
 		return rVal;
 	}
 };
+
+typedef CPUInstanceController<chromaticShader, skybox, color, color, color, color, color, color> skyboxCPU;
+#ifdef __NVCC__
+int fSkybox() {
+	color c;
+	skyboxCPU shader(c, c, c, c, c, c);
+	shader.getGPUPtr();
+	return c.x;
+}
+#endif // __NVCC__
 
 
 struct meshShaded {

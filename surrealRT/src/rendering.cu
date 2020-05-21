@@ -14,7 +14,7 @@ void initRays(short xRes , short yRes , vec3d vertex , vec3d topLeft , vec3d rig
 	
 	short x, short y;
 	x = tId % xRes;
-	y = tId / yRes;
+	y = tId / xRes;
 
 	rays[tId].setRaw_s(vertex, vec3d::subtract(vec3d::add(topLeft, vec3d::add(vec3d::multiply(right, (x + 0.5) / xRes), vec3d::multiply(down, (y + 0.5) / yRes))), vertex));
 }

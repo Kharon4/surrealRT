@@ -135,35 +135,48 @@ window::~window() {
 
 void window::draw() {
 	HDC hdc;
-	hdc = GetDC(windowHandle);
-	Gdiplus::Graphics graphics(hdc, windowHandle);
+	hdc = GetDC(windowHandle);//get DC for drawing
 
+	//set drawing mode for fast BitBlt
+	Gdiplus::Graphics graphics(hdc, windowHandle);
 	graphics.SetCompositingMode(Gdiplus::CompositingMode::CompositingModeSourceCopy);
 	graphics.SetCompositingQuality(Gdiplus::CompositingQuality::CompositingQualityHighSpeed);
 	graphics.SetPixelOffsetMode(Gdiplus::PixelOffsetMode::PixelOffsetModeNone);
 	graphics.SetSmoothingMode(Gdiplus::SmoothingMode::SmoothingModeNone);
 	graphics.SetInterpolationMode(Gdiplus::InterpolationMode::InterpolationModeDefault);
 
-	Gdiplus::Bitmap bmp(x, y, 4 * ((x * 24 + 31) / 32), PixelFormat24bppRGB, data);
+	//bitmap with the data
+	Gdiplus::Bitmap bmp(x, y, 4 * ((x * 24 + 31) / 32), PixelFormat24bppRGB, data);//
 
-	HBITMAP hbmp;
+	//device cependant bitmap
+	HBITMAP hbmp;//
 
-	Gdiplus::Color backgroundCol(0, 0, 0);
-	bmp.GetHBITMAP(backgroundCol, &hbmp);
+	//get hBitmap from bitmap
+	Gdiplus::Color backgroundCol(0, 0, 0);//
+	bmp.GetHBITMAP(backgroundCol, &hbmp);//
 
+	//get compatible DC for window 
 	HDC hdcMem = CreateCompatibleDC(hdc);
-	HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmp);
+	
+	//converts the hBitmap into the correct form
+	HBITMAP hbmOld = (HBITMAP)SelectObject(hdcMem, hbmp);//save old contents
+	
+	//store the data about the hBitmap into a structure
 	BITMAP bm;
-
 	GetObject(hbmp, sizeof(bm), &bm);
 
+	//BitBlt
 	BitBlt(hdc, 0, 0, bm.bmWidth, bm.bmHeight, hdcMem, 0, 0, SRCCOPY);
 
+	//restore old content
 	SelectObject(hdcMem, hbmOld);
-
+	
+	//delete compatible DC
 	DeleteDC(hdcMem);
-	DeleteObject(hbmp);
+	//delete hBitmap
+	DeleteObject(hbmp);//
 
+	//draw completed relaease window DC
 	ReleaseDC(windowHandle, hdc);
 }
 

@@ -27,6 +27,7 @@ public:
 	CPUInstanceController(args... constructorArgs) {
 		parentClass** ptrToPtrToCClass = nullptr;
 		cudaMalloc(&ptrToPtrToCClass, sizeof(parentClass*));
+		cudaDeviceSynchronize();
 		GPUCreateInstance<parentClass, childClass, args...> << <1, 1 >> > (ptrToPtrToCClass, constructorArgs...);
 		cudaDeviceSynchronize();
 		cudaMemcpy(&ptrToCClass, ptrToPtrToCClass, sizeof(parentClass*), cudaMemcpyKind::cudaMemcpyDeviceToHost);
@@ -39,9 +40,11 @@ public:
 	~CPUInstanceController() {
 		parentClass** ptrToPtrToCClass = nullptr;
 		cudaMalloc(&ptrToPtrToCClass, sizeof(parentClass*));
+		cudaDeviceSynchronize();
 		cudaMemcpy(ptrToPtrToCClass,&ptrToCClass, sizeof(parentClass*), cudaMemcpyKind::cudaMemcpyHostToDevice);
 		cudaDeviceSynchronize();
 		GPUDeleteInstance<parentClass> << <1, 1 >> > (ptrToPtrToCClass);
+		cudaDeviceSynchronize();
 		cudaFree(ptrToPtrToCClass);
 	}
 };
