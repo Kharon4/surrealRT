@@ -34,6 +34,7 @@
     <ClInclude Include="headers\cudaRelated\commonMemory.cuh" />
     <ClInclude Include="headers\chromaticShader.cuh" />
     <ClInclude Include="headers\GPUInstantiator.cuh" />
+    <ClInclude Include="headers\GlobalGPUDefsConstants.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\rendering.cu" />

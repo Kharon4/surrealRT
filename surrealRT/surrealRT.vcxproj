@@ -28,6 +28,7 @@
     <ClInclude Include="headers\camera.cuh" />
     <ClInclude Include="headers\chromaticShader.cuh" />
     <ClInclude Include="headers\cudaRelated\commonMemory.cuh" />
+    <ClInclude Include="headers\GlobalGPUDefsConstants.cuh" />
     <ClInclude Include="headers\GPUInstantiator.cuh" />
     <ClInclude Include="headers\mesh.h" />
     <ClInclude Include="headers\rendering.cuh" />

@@ -2,7 +2,7 @@
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-
+#include "GlobalGPUDefsConstants.cuh"
 
 #ifdef __NVCC__
 template <typename parentClass, typename childClass, typename... args>
@@ -27,11 +27,11 @@ public:
 	CPUInstanceController(args... constructorArgs) {
 		parentClass** ptrToPtrToCClass = nullptr;
 		cudaMalloc(&ptrToPtrToCClass, sizeof(parentClass*));
-		cudaDeviceSynchronize();
+		cudaDebugDeviceSync();
 		GPUCreateInstance<parentClass, childClass, args...> << <1, 1 >> > (ptrToPtrToCClass, constructorArgs...);
-		cudaDeviceSynchronize();
+		cudaDebugDeviceSync();
 		cudaMemcpy(&ptrToCClass, ptrToPtrToCClass, sizeof(parentClass*), cudaMemcpyKind::cudaMemcpyDeviceToHost);
-		cudaDeviceSynchronize();
+		cudaDebugDeviceSync();
 		cudaFree(ptrToPtrToCClass);
 	}
 
@@ -40,11 +40,11 @@ public:
 	~CPUInstanceController() {
 		parentClass** ptrToPtrToCClass = nullptr;
 		cudaMalloc(&ptrToPtrToCClass, sizeof(parentClass*));
-		cudaDeviceSynchronize();
+		cudaDebugDeviceSync();
 		cudaMemcpy(ptrToPtrToCClass,&ptrToCClass, sizeof(parentClass*), cudaMemcpyKind::cudaMemcpyHostToDevice);
-		cudaDeviceSynchronize();
+		cudaDebugDeviceSync();
 		GPUDeleteInstance<parentClass> << <1, 1 >> > (ptrToPtrToCClass);
-		cudaDeviceSynchronize();
+		cudaDebugDeviceSync();
 		cudaFree(ptrToPtrToCClass);
 	}
 };

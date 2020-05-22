@@ -30,8 +30,8 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 
-	//enableConsole();
-	int x = 1080, y = 720;
+	enableConsole();
+	int x = 1920, y = 1080;
 	window w1(hInstance, nCmdShow, L"test window", x, y);
 	for (int i = 0; i < x * y; ++i) {
 		w1.data[i * 3 + 0] = 70;

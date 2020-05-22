@@ -1,11 +1,11 @@
 #include "rendering.cuh"
+
+#ifdef __GPUDEBUG
 #include <iostream>
+#endif
 
-#define threadNo 32
+#define threadNo 512
 #define blockNo(Threads) ((Threads/threadNo) + 1)
-
-
-#define _enableDebug 0
 
 __global__
 void initRays(short xRes , short yRes , vec3d vertex , vec3d topLeft , vec3d right , vec3d down , linearMathD::line * rays) {
@@ -94,9 +94,14 @@ void getByteColor(color* data, colorBYTE* dataByte, float min, float delta, size
 }
 
 void displayCudaError() {
-#if _enableDebug
+#ifdef __GPUDEBUG
 	cudaDeviceSynchronize();
-	std::cout << cudaGetErrorName(cudaGetLastError()) << std::endl;
+	cudaError_t err = cudaGetLastError();
+	std::cout << cudaGetErrorName(err) << std::endl;
+	if (err != cudaError::cudaSuccess) {
+		int x;
+		std::cin >> x;
+	}
 #else
 
 #endif
@@ -123,7 +128,6 @@ void Render(camera cam,BYTE *data, meshShaded * meshS , meshConstrained * meshC 
 	cudaDeviceSynchronize();
 	cudaFree(DataByte);
 	cudaFree(Data);
-	displayCudaError();
 	cudaFree(rays);
 	displayCudaError();
 }
