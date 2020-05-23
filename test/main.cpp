@@ -7,7 +7,8 @@
 
 bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
 	float rSpeed = -0.05;
-	
+	float mSpeed = 1;
+
 	input::update();
 	if (input::isDown['X'])return false;
 	if (input::pressed['M']) {
@@ -17,6 +18,26 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 		input::lockX = input::mouseX;
 		input::lockY = input::mouseY;
 	}
+
+	vec3d displacement(0,0,0);
+
+	if (input::isDown['W'])
+		displacement += vec3d(1, 0, 0);
+	if (input::isDown['S'])
+		displacement -= vec3d(1, 0, 0);
+	if (input::isDown['D'])
+		displacement -= vec3d(0, 1, 0);
+	if (input::isDown['A'])
+		displacement += vec3d(0, 1, 0);
+	if (input::isDown['E'])
+		displacement += vec3d(0, 0, 1);
+	if (input::isDown['Q'])
+		displacement -= vec3d(0, 0, 1);
+
+	displacement.normalize();
+
+	t.CS.addRelativePos(displacement * mSpeed * input::deltaTime);
+
 
 	if (input::lock) {
 		input::hideCursor();
@@ -31,7 +52,7 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 
 	enableConsole();
-	int x = 1920, y = 1080;
+	int x = 800, y = 600;
 	window w1(hInstance, nCmdShow, L"test window", x, y);
 	for (int i = 0; i < x * y; ++i) {
 		w1.data[i * 3 + 0] = 70;
@@ -53,14 +74,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	t.addVec(c.sc.screenCenter, &c.sc.screenCenter);
 	tDr.addVec(c.sc.halfRight, &c.sc.halfRight);
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
-	commonMemory<meshShaded> temp(1);
-	temp.getHost()->M.pts[0] = vec3d(-1, 0, -1);
-	temp.getHost()->M.pts[1] = vec3d(1, 0, -1);
-	temp.getHost()->M.pts[2] = vec3d(1, 5, -1);
+	commonMemory<meshShaded> temp(2);
+	temp.getHost()[0].M.pts[0] = vec3d(-1, 0, -1);
+	temp.getHost()[0].M.pts[1] = vec3d(1, 0, -1);
+	temp.getHost()[0].M.pts[2] = vec3d(1, 2, -1);
+	temp.getHost()[1].M.pts[0] = vec3d(-1, 0, -1);
+	temp.getHost()[1].M.pts[1] = vec3d(1, 2, -1);
+	temp.getHost()[1].M.pts[2] = vec3d(-1, 2, -1);
 	color testColor;
 	testColor.z = 255;
 	solidColCPU col(testColor);
-	temp.getHost()->colShader = col.getGPUPtr();
+	temp.getHost()[0].colShader = col.getGPUPtr();
+	temp.getHost()[1].colShader = col.getGPUPtr();
 	
 	graphicalWorld world(&temp);
 	
