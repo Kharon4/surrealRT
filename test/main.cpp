@@ -4,6 +4,7 @@
 
 #include "win32WindowingSystem.h"
 #include "rendering.cuh"
+#include <thread>
 
 bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
 	float rSpeed = -0.05;
@@ -49,17 +50,22 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 	return true;
 }
 
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
+window* w1;
+void updateWindow() {
+	w1->update();
+}
 
-	enableConsole();
-	int x = 800, y = 600;
-	window w1(hInstance, nCmdShow, L"test window", x, y);
+
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
+	//enableConsole();
+	int x = 720, y = 480;
+	w1 = new window (hInstance, nCmdShow, L"surrealRT", x, y);
 	for (int i = 0; i < x * y; ++i) {
-		w1.data[i * 3 + 0] = 70;
-		w1.data[i * 3 + 1] = 0;
-		w1.data[i * 3 + 2] = 70;
+		(*w1).data[i * 3 + 0] = 70;
+		(*w1).data[i * 3 + 1] = 0;
+		(*w1).data[i * 3 + 2] = 70;
 	}
-	w1.update();
+	(*w1).update();
 
 
 	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y)/x));
@@ -82,18 +88,27 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	temp.getHost()[1].M.pts[1] = vec3d(1, 2, -1);
 	temp.getHost()[1].M.pts[2] = vec3d(-1, 2, -1);
 	color testColor;
-	testColor.z = 255;
+	testColor = vec3f(50,50,50);
 	solidColCPU col(testColor);
 	temp.getHost()[0].colShader = col.getGPUPtr();
 	temp.getHost()[1].colShader = col.getGPUPtr();
 	
 	graphicalWorld world(&temp);
 	
-	while (updateCam(t,tDr)&& (!w1.isWindowClosed())) {
-		world.render(c, w1.data);
-		w1.update();
-	}
 	
+	while (updateCam(t,tDr)&& (!(*w1).isWindowClosed())) {
+		unsigned long long start, uTime;
+		start = input::micros();
+		std::thread update(updateWindow);
+		world.renderPartial(c);
+		world.renderPartial(c);
+		update.join();
+		world.copyData(c, (*w1).data);
+		uTime = input::micros();
+		//std::cout <<1000000.0/(uTime-start) << std::endl;
+	}
+
+	delete w1;
 	
 	return 0;
 }

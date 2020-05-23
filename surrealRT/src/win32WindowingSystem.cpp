@@ -207,6 +207,11 @@ unsigned long long input::millis(){
 	return ms;
 }
 
+unsigned long long input::micros() {
+	uint64_t micro = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
+	return micro;
+}
+
 bool input::released[256];
 bool input::isDown[256];
 bool input::pressed[256];

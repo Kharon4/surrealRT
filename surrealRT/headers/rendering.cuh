@@ -8,6 +8,7 @@
 
 class graphicalWorld {
 private:
+	colorBYTE* tempData = nullptr;
 	commonMemory<meshShaded>* meshS;
 	commonMemory<meshConstrained>* meshC;
 public:
@@ -18,5 +19,7 @@ public:
 
 	void render(camera cam, BYTE* data);
 
+	void renderPartial(camera cam);
+	void copyData(camera cam,BYTE* data);
 	~graphicalWorld() { delete meshC; }
 };

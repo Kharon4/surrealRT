@@ -107,37 +107,77 @@ void displayCudaError() {
 #endif
 }
 
-void Render(camera cam,BYTE *data, meshShaded * meshS , meshConstrained * meshC , size_t noTrs) {
-	linearMathD::line * rays;
+void generateGPUDisplatData(colorBYTE** data , camera cam) {
+	cudaMalloc(data, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY);
+}
+
+void renderIntermediate(camera cam,colorBYTE* DataByte, meshShaded* meshS, meshConstrained* meshC, size_t noTrs) {
+	linearMathD::line* rays;
 	cudaMalloc(&rays, sizeof(linearMathD::line) * cam.sc.resX * cam.sc.resY);
-	initRays<<<blockNo(cam.sc.resX*cam.sc.resY), threadNo >>>(cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
+	initRays << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
 	displayCudaError();
-	//skyboxCPU defaultShader(color(0, 0, 128), color(-200,-200,-200), color(150,0,0), color(0,0,64), color(0,0,64), color(0,0,64));
-	solidColCPU defaultShader(color(0, 0, 0));
+	skyboxCPU defaultShader(color(0, 0, 128), color(-200, -200, -200), color(150, 0, 0), color(0, 0, 64), color(0, 0, 64), color(0, 0, 64));
+	//solidColCPU defaultShader(color(0, 0, 0));
 	displayCudaError();
 	color* Data;
 	cudaMalloc(&Data, sizeof(color) * cam.sc.resX * cam.sc.resY);
 	displayCudaError();
-	getIntersections << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (rays, cam.sc.resX * cam.sc.resY,meshS,meshC,noTrs,Data,defaultShader.getGPUPtr());
+	getIntersections << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (rays, cam.sc.resX * cam.sc.resY, meshS, meshC, noTrs, Data, defaultShader.getGPUPtr());
 	displayCudaError();
-	colorBYTE *DataByte;
-	cudaMalloc(&DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY);
 	getByteColor << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (Data, DataByte, 0, 256, cam.sc.resX * cam.sc.resY);
 	displayCudaError();
-	cudaMemcpy(data, DataByte, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY, cudaMemcpyKind::cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
-	cudaFree(DataByte);
 	cudaFree(Data);
 	cudaFree(rays);
 	displayCudaError();
 }
 
+void cpyData(colorBYTE* data , BYTE * displayData, camera cam) {
+	cudaDeviceSynchronize();
+	cudaMemcpy(displayData, data, sizeof(colorBYTE) * cam.sc.resX * cam.sc.resY, cudaMemcpyKind::cudaMemcpyDeviceToHost);
+	cudaFree(data);
+	data = nullptr;
+}
+
+void Render(camera cam,BYTE *data, meshShaded * meshS , meshConstrained * meshC , size_t noTrs) {
+	colorBYTE* displayData;
+	generateGPUDisplatData(&displayData, cam);
+	renderIntermediate(cam, displayData, meshS, meshC, noTrs);
+	cpyData(displayData, data, cam);
+}
+
 
 void graphicalWorld::render(camera cam, BYTE* data) {
+
+
 	bool updated=false;
 	meshShaded* devPtr = meshS->getDevice(&updated);
 	if(updated){
 		initMesh<<<blockNo(meshS->getNoElements()),threadNo>>>(devPtr, meshC->getDevice(), meshS->getNoElements());
 	}
 	Render(cam, data, meshS->getDevice(), meshC->getDevice(), meshS->getNoElements());
+
+}
+
+
+void graphicalWorld::renderPartial(camera cam) {
+	
+	bool updated = false;
+	meshShaded* devPtr = meshS->getDevice(&updated);
+	if (updated) {
+		initMesh << <blockNo(meshS->getNoElements()), threadNo >> > (devPtr, meshC->getDevice(), meshS->getNoElements());
+	}
+	if (tempData != nullptr) {
+		cudaDeviceSynchronize();
+		cudaFree(tempData);
+		tempData = nullptr;
+	}
+	generateGPUDisplatData(&tempData, cam);
+	renderIntermediate(cam, tempData, meshS->getDevice(), meshC->getDevice(), meshS->getNoElements());
+	//Render(cam, data, meshS->getDevice(), meshC->getDevice(), meshS->getNoElements());
+}
+
+void graphicalWorld::copyData(camera cam, BYTE* data) {
+	if (tempData != nullptr) {
+		cpyData(tempData, data, cam);
+	}
 }

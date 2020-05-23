@@ -33,6 +33,7 @@ public:
 
 	void update();//time consuming
 
+
 	bool  isWindowClosed();
 
 	POINT GlobalToScreen(POINT global);
@@ -65,6 +66,7 @@ public:
 	static void update();
 
 	static unsigned long long millis();
+	static unsigned long long micros();
 	static void hideCursor();
 	static void showCursor();
 	
