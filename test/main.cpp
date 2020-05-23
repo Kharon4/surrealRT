@@ -85,15 +85,15 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	testColor = vec3f(50, 50, 50);
 	solidColCPU col(testColor);
 	commonMemory<meshShaded> temp = loadModel("res/cube.obj", col.getGPUPtr());
-	
+	//loaded
+	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
+
 	graphicalWorld world(&temp);
-	
 	
 	while (updateCam(t,tDr)&& (!(*w1).isWindowClosed())) {
 		unsigned long long start, uTime;
 		start = input::micros();
 		std::thread update(updateWindow);
-		world.renderPartial(c);
 		world.renderPartial(c);
 		update.join();
 		world.copyData(c, (*w1).data);

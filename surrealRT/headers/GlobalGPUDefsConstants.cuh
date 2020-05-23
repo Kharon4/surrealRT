@@ -1,7 +1,7 @@
 #pragma once
 
 
-#define __GPUDEBUG 1 //comment to go int release mode
+//#define __GPUDEBUG 1 //comment to go int release mode
 
 //define debugging code
 #ifdef __NVCC__
