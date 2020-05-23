@@ -4,6 +4,7 @@
 
 #include "win32WindowingSystem.h"
 #include "rendering.cuh"
+#include "parsing/parsingAlgos/obj.h"
 #include <thread>
 
 bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
@@ -57,7 +58,7 @@ void updateWindow() {
 
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
-	//enableConsole();
+	enableConsole();
 	int x = 720, y = 480;
 	w1 = new window (hInstance, nCmdShow, L"surrealRT", x, y);
 	for (int i = 0; i < x * y; ++i) {
@@ -80,18 +81,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	t.addVec(c.sc.screenCenter, &c.sc.screenCenter);
 	tDr.addVec(c.sc.halfRight, &c.sc.halfRight);
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
-	commonMemory<meshShaded> temp(2);
-	temp.getHost()[0].M.pts[0] = vec3d(-1, 0, -1);
-	temp.getHost()[0].M.pts[1] = vec3d(1, 0, -1);
-	temp.getHost()[0].M.pts[2] = vec3d(1, 2, -1);
-	temp.getHost()[1].M.pts[0] = vec3d(-1, 0, -1);
-	temp.getHost()[1].M.pts[1] = vec3d(1, 2, -1);
-	temp.getHost()[1].M.pts[2] = vec3d(-1, 2, -1);
 	color testColor;
-	testColor = vec3f(50,50,50);
+	testColor = vec3f(50, 50, 50);
 	solidColCPU col(testColor);
-	temp.getHost()[0].colShader = col.getGPUPtr();
-	temp.getHost()[1].colShader = col.getGPUPtr();
+	commonMemory<meshShaded> temp = loadModel("res/cube.obj", col.getGPUPtr());
 	
 	graphicalWorld world(&temp);
 	

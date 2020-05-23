@@ -18,6 +18,9 @@
     <ClCompile Include="src\win32WindowingSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\parsing\parsingAlgos\obj.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -35,6 +38,9 @@
     <ClInclude Include="headers\chromaticShader.cuh" />
     <ClInclude Include="headers\GPUInstantiator.cuh" />
     <ClInclude Include="headers\GlobalGPUDefsConstants.cuh" />
+    <ClInclude Include="headers\parsing\parsingAlgos\obj.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\rendering.cu" />
