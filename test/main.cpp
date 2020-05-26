@@ -5,7 +5,6 @@
 #include "win32WindowingSystem.h"
 #include "rendering.cuh"
 #include "parsing/parsingAlgos/obj.h"
-#include <thread>
 
 bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
 	float rSpeed = -0.05;
@@ -51,22 +50,16 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 	return true;
 }
 
-window* w1;
-void updateWindow() {
-	w1->update();
-}
-
-
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
-	int x = 720, y = 480;
-	w1 = new window (hInstance, nCmdShow, L"surrealRT", x, y);
+	int x = 1080, y = 720;
+	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	for (int i = 0; i < x * y; ++i) {
-		(*w1).data[i * 3 + 0] = 70;
-		(*w1).data[i * 3 + 1] = 0;
-		(*w1).data[i * 3 + 2] = 70;
+		w1.data[i * 3 + 0] = 70;
+		w1.data[i * 3 + 1] = 0;
+		w1.data[i * 3 + 2] = 70;
 	}
-	(*w1).update();
+	w1.update();
 
 
 	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y)/x));
@@ -90,18 +83,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 
 	graphicalWorld world(&temp);
 	
-	while (updateCam(t,tDr)&& (!(*w1).isWindowClosed())) {
+	while (updateCam(t,tDr)&& (!w1.isWindowClosed())) {
 		unsigned long long start, uTime;
 		start = input::micros();
-		std::thread update(updateWindow);
-		world.renderPartial(c);
-		update.join();
-		world.copyData(c, (*w1).data);
+		world.render(c, w1.data, [&w1]() {w1.update(); });
 		uTime = input::micros();
-		//std::cout <<1000000.0/(uTime-start) << std::endl;
+		std::cout <<1000000.0/(uTime-start) << std::endl;
 	}
 
-	delete w1;
 	
 	return 0;
 }

@@ -1,5 +1,7 @@
 #include "rendering.cuh"
 
+#include <thread>
+
 #ifdef __GPUDEBUG
 #include <iostream>
 #endif
@@ -68,7 +70,7 @@ void getIntersections(linearMathD::line * rays, size_t noRays,meshShaded*trs , m
 	meshShaded *outM;
 	meshConstrained* outCM;
 	getClosestIntersection(trs, collTrs, rays[tId], noTrs,outM,outCM,fp.ip.lambda,fp.ip.pt);
-	fp.ray = rays[tId];
+	fp.ray = rays + tId;
 	//shade
 	if (outM == nullptr)displayData[tId] = (defaultShader)->shade(fp);
 	else displayData[tId] = outM->colShader->shade(fp);
@@ -165,6 +167,12 @@ void graphicalWorld::render(camera cam, BYTE* data) {
 
 }
 
+void graphicalWorld::render(camera cam, BYTE* data, std::function<void()> drawCall) {
+	std::thread draw(drawCall);
+	renderPartial(cam);
+	draw.join();
+	copyData(cam, data);
+}
 
 void graphicalWorld::renderPartial(camera cam) {
 	

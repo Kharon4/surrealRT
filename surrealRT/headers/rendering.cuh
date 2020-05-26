@@ -6,6 +6,8 @@
 #include "rotation.cuh"
 #include "cudaRelated/commonMemory.cuh"
 
+#include <functional>
+
 class graphicalWorld {
 private:
 	colorBYTE* tempData = nullptr;
@@ -17,7 +19,11 @@ public:
 		meshC = new commonMemory<meshConstrained>(meshS->getNoElements(), commonMemType::deviceOnly); 
 	}
 
+
+
 	void render(camera cam, BYTE* data);
+	void render(camera cam, BYTE* data, std::function<void()> drawCall);
+
 
 	void renderPartial(camera cam);
 	void copyData(camera cam,BYTE* data);

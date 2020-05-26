@@ -17,7 +17,7 @@ struct intersectionParam {
 
 struct fragmentProperties {
 	short camX, camY;
-	linearMathD::line ray;
+	linearMathD::line *ray;
 	intersectionParam ip;
 };
 
@@ -53,6 +53,17 @@ int fSolicCol() {
 #endif // __NVCC__
 
 
+class shadedSolidColor : public chromaticShader {
+public:
+	color c;
+	vec3d dir;
+
+	__device__ shadedSolidColor(color C, vec3d DIR) { c = C; dir = DIR; }
+	__device__ ~shadedSolidColor(){}
+
+	__device__ color shade(fragmentProperties& sd) { }
+};
+
 
 class skybox :public chromaticShader {
 public:
@@ -65,17 +76,17 @@ public:
 	__device__ skybox(color Up, color Down, color XP, color XN, color YP, color YN) { up = Up; down = Down; xp = XP; xn = XN; yp = YP; yn = YN; }
 	__device__ skybox(){}
 	__device__ color shade(fragmentProperties& sd) {
-		float m = sd.ray.getDr().mag();
-		float ratio = sd.ray.getDr().z/m;
+		float m = sd.ray->getDr().mag();
+		float ratio = sd.ray->getDr().z/m;
 		ratio += 1;
 		ratio /= 2;
 		color rVal;
 		rVal = up * ratio + down * (1 - ratio);
-		ratio = sd.ray.getDr().x / m;
+		ratio = sd.ray->getDr().x / m;
 		ratio += 1;
 		ratio /= 2;
 		rVal += xp * ratio + xn * (1 - ratio);
-		ratio = sd.ray.getDr().y / m;
+		ratio = sd.ray->getDr().y / m;
 		ratio += 1;
 		ratio /= 2;
 		rVal += yp * ratio + yn * (1 - ratio);
