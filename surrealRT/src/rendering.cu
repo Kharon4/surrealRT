@@ -23,10 +23,10 @@ void initRays(short xRes , short yRes , vec3d vertex , vec3d topLeft , vec3d rig
 
 __device__ __host__ void calculateMeshConstraints(mesh* Mesh , meshConstrained *meshC){
 	vec3d plNormal = vec3d::cross(Mesh->pts[1] - Mesh->pts[0], Mesh->pts[2] - Mesh->pts[0]);
-	meshC->planeNormal = plNormal;
-	meshC->sidePlaneNormals[0] = vec3d::cross(plNormal, Mesh->pts[1] - Mesh->pts[0]);
-	meshC->sidePlaneNormals[1] = vec3d::cross(plNormal, Mesh->pts[2] - Mesh->pts[1]);
-	meshC->sidePlaneNormals[2] = vec3d::cross(plNormal, Mesh->pts[0] - Mesh->pts[2]);
+	meshC->planeNormal = vec3d::normalizeRaw_s(plNormal);
+	meshC->sidePlaneNormals[0] = vec3d::normalizeRaw_s(vec3d::cross(plNormal, Mesh->pts[1] - Mesh->pts[0]));
+	meshC->sidePlaneNormals[1] = vec3d::normalizeRaw_s(vec3d::cross(plNormal, Mesh->pts[2] - Mesh->pts[1]));
+	meshC->sidePlaneNormals[2] = vec3d::normalizeRaw_s(vec3d::cross(plNormal, Mesh->pts[0] - Mesh->pts[2]));
 }
 
 __global__
@@ -62,18 +62,24 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMat
 }
 
 __global__
-void getIntersections(linearMathD::line * rays, size_t noRays,meshShaded*trs , meshConstrained*collTrs, size_t noTrs,color* displayData, chromaticShader* defaultShader) {
+void getIntersections(linearMathD::line* rays, size_t noRays, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* displayData, chromaticShader* defaultShader) {
 	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 	if (tId >= noRays)return;
 
 	fragmentProperties fp;
-	meshShaded *outM;
-	meshConstrained* outCM;
-	getClosestIntersection(trs, collTrs, rays[tId], noTrs,outM,outCM,fp.ip.lambda,fp.ip.pt);
 	fp.ray = rays + tId;
+	meshShaded* outM;
+	getClosestIntersection(trs, collTrs, *fp.ray, noTrs, outM, fp.ip.MC, fp.ip.lambda, fp.ip.pt);
+
 	//shade
-	if (outM == nullptr)displayData[tId] = (defaultShader)->shade(fp);
-	else displayData[tId] = outM->colShader->shade(fp);
+	if (outM == nullptr) {
+		fp.ip.M = nullptr;
+		displayData[tId] = (defaultShader)->shade(fp);
+	}
+	else {
+		fp.ip.M = &(outM->M);
+		displayData[tId] = outM->colShader->shade(fp);
+	}
 }
 
 

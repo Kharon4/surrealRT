@@ -13,6 +13,8 @@ struct colorBYTE {
 struct intersectionParam {
 	double lambda;
 	vec3d pt;
+	meshConstrained* MC;
+	mesh* M;
 };
 
 struct fragmentProperties {
@@ -56,13 +58,32 @@ int fSolicCol() {
 class shadedSolidColor : public chromaticShader {
 public:
 	color c;
+	color light;
 	vec3d dir;
 
-	__device__ shadedSolidColor(color C, vec3d DIR) { c = C; dir = DIR; }
+
+	__device__ shadedSolidColor(color C, color Light, vec3d DIR) { c = C; dir = vec3d::normalizeRaw_s(DIR); light = Light; }
 	__device__ ~shadedSolidColor(){}
 
-	__device__ color shade(fragmentProperties& sd) { }
+	__device__ color shade(fragmentProperties& sd) {
+		vec3f rVal = (light * vec3d::dot(sd.ip.MC->planeNormal, dir));
+		rVal.x *= c.x;
+		rVal.y *= c.y;
+		rVal.z *= c.z;
+		return (rVal + c);
+	}
 };
+
+typedef CPUInstanceController<chromaticShader, shadedSolidColor, color, color, vec3d> shadedSolidColCPU;
+
+#ifdef __NVCC__
+int fShadedSolicCol() {
+	color c;
+	shadedSolidColCPU shader(c,c,vec3d(0,0,0));
+	shader.getGPUPtr();
+	return c.x;
+}
+#endif // __NVCC__
 
 
 class skybox :public chromaticShader {

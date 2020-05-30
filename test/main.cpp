@@ -52,7 +52,7 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
-	int x = 1080, y = 720;
+	int x = 720, y = 480;
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	for (int i = 0; i < x * y; ++i) {
 		w1.data[i * 3 + 0] = 70;
@@ -75,8 +75,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	tDr.addVec(c.sc.halfRight, &c.sc.halfRight);
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
 	color testColor;
-	testColor = vec3f(50, 50, 50);
-	solidColCPU col(testColor);
+	testColor = vec3f(100, 100, 100);
+	shadedSolidColCPU col(testColor,testColor/500,vec3d(1,2,3));
 	commonMemory<meshShaded> temp = loadModel("res/cube.obj", col.getGPUPtr());
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
@@ -88,7 +88,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 		start = input::micros();
 		world.render(c, w1.data, [&w1]() {w1.update(); });
 		uTime = input::micros();
-		std::cout <<1000000.0/(uTime-start) << std::endl;
+		//std::cout <<1000000.0/(uTime-start) << std::endl;
 	}
 
 	
