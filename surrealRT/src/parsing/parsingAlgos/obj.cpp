@@ -26,17 +26,23 @@ commonMemory<meshShaded> loadModel(std::string fileNameWithExtension,chromaticSh
 
 			file >> id >> c;
 			ms.M.pts[0] = vertices[id - 1];
-			file >> id >> c;
+			file >> id;
+			file.clear();
+			file >> c;
 			file >> id;
 
 			file >> id >> c;
 			ms.M.pts[1] = vertices[id - 1];
-			file >> id >> c;
+			file >> id;
+			file.clear();
+			file >> c;
 			file >> id;
 
 			file >> id >> c;
 			ms.M.pts[2] = vertices[id - 1];
-			file >> id >> c;
+			file >> id;
+			file.clear();
+			file >> c;
 			file >> id;
 			ms.colShader = shader;
 			mesh.push_back(ms);

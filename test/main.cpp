@@ -8,7 +8,7 @@
 
 bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
 	float rSpeed = -0.05;
-	float mSpeed = 1;
+	float mSpeed = 2;
 
 	input::update();
 	if (input::isDown['X'])return false;
@@ -77,7 +77,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	color testColor;
 	testColor = vec3f(100, 100, 100);
 	shadedSolidColCPU col(testColor,testColor/500,vec3d(1,2,3));
-	commonMemory<meshShaded> temp = loadModel("res/cube.obj", col.getGPUPtr());
+	commonMemory<meshShaded> temp = loadModel("res/monkey.obj", col.getGPUPtr());
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 
@@ -88,7 +88,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 		start = input::micros();
 		world.render(c, w1.data, [&w1]() {w1.update(); });
 		uTime = input::micros();
-		//std::cout <<1000000.0/(uTime-start) << std::endl;
+		std::cout <<1000000.0/(uTime-start) << std::endl;
 	}
 
 	
