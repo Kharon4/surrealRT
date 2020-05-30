@@ -13,7 +13,7 @@ private:
 public:
 
 	__host__
-	commonMemory(size_t Size = 1, commonMemType Type = commonMemType::both);
+	commonMemory(size_t Size = 1, commonMemType Type = commonMemType::both);//size is the no of elements
 
 	size_t getNoElements();
 

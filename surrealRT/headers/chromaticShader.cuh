@@ -3,12 +3,8 @@
 #include "linearMath.cuh"
 #include "mesh.h"
 #include "GPUInstantiator.cuh"
+#include "color.h"
 
-typedef vec3f color;//x=r , y=g , z=b
-
-struct colorBYTE {
-	BYTE b, g, r;
-};
 
 struct intersectionParam {
 	double lambda;

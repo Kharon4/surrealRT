@@ -75,9 +75,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	tDr.addVec(c.sc.halfRight, &c.sc.halfRight);
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
 	color testColor;
-	testColor = vec3f(100, 100, 100);
+	testColor = vec3f(100, 25, 25);
 	shadedSolidColCPU col(testColor,testColor/500,vec3d(1,2,3));
-	commonMemory<meshShaded> temp = loadModel("res/monkey.obj", col.getGPUPtr());
+	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr());
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 

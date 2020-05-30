@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\parsing\classes\texture.cpp" />
     <ClCompile Include="src\parsing\parsingAlgos\obj.cpp" />
     <ClCompile Include="src\win32WindowingSystem.cpp" />
   </ItemGroup>
@@ -28,10 +29,12 @@
   <ItemGroup>
     <ClInclude Include="headers\camera.cuh" />
     <ClInclude Include="headers\chromaticShader.cuh" />
+    <ClInclude Include="headers\color.h" />
     <ClInclude Include="headers\cudaRelated\commonMemory.cuh" />
     <ClInclude Include="headers\GlobalGPUDefsConstants.cuh" />
     <ClInclude Include="headers\GPUInstantiator.cuh" />
     <ClInclude Include="headers\mesh.h" />
+    <ClInclude Include="headers\parsing\classes\texture.h" />
     <ClInclude Include="headers\parsing\parsingAlgos\obj.h" />
     <ClInclude Include="headers\rendering.cuh" />
     <ClInclude Include="headers\win32WindowingSystem.h" />
