@@ -49,6 +49,57 @@ T* commonMemory<T>::getDevice(bool* OUTupdated) {
 	return (T*)devicePtr;
 }
 
+
+template <typename T>
+void commonMemory<T>::changeMemType(commonMemType newType) {
+	//check if new type and old type r same.
+	if (newType == type)return;
+	
+	//if !both create space
+	if (type != commonMemType::both) {
+		if (type == commonMemType::hostOnly) {
+			//create device mem
+			cudaMalloc(&devicePtr, size);
+			//copy data
+			cudaMemcpy(devicePtr, hostPtr, size, cudaMemcpyKind::cudaMemcpyHostToDevice);
+		}
+		else {
+			//create host mem
+			hostPtr = new unsigned char[size];
+			//copy data
+			cudaMemcpy(hostPtr, devicePtr, size, cudaMemcpyKind::cudaMemcpyDeviceToHost);
+		}
+	}
+	else {
+		//update the correct side;
+		getHost();
+		getDevice();
+	}
+
+	//delete
+	if (newType == commonMemType::hostOnly) {
+		hostUpdated = true;
+		//delete device
+		if (devicePtr != nullptr)cudaFree(devicePtr);
+		devicePtr = nullptr;
+	}
+	else if (newType == commonMemType::deviceOnly) {
+		hostUpdated = false;
+		//delete host
+		if (hostPtr != nullptr)delete[] hostPtr;
+		hostPtr = nullptr;
+	}
+
+	//perform conversion
+	type = newType;
+}
+
+template <typename T>
+commonMemType commonMemory<T>::getMemType() {
+	return type;
+}
+
+
 template <typename T>
 commonMemory<T>::~commonMemory() {
 	if (hostPtr != nullptr)delete[] hostPtr;

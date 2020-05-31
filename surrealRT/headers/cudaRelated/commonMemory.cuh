@@ -20,6 +20,10 @@ public:
 	T* getHost(bool* OUTupdated = nullptr);//OUTupdated = true when data is copied
 	T* getDevice(bool* OUTupdated = nullptr);//OUTupdated = true when data is copied
 
+	void changeMemType(commonMemType newType);
+	commonMemType getMemType();
+
+
 	__host__
 	~commonMemory();
 };
