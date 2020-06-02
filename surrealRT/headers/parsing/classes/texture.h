@@ -21,7 +21,10 @@ public:
 	colorBYTE* getDevicePtr();
 	colorBYTE* getHostPtr();
 
-	void copyToBuffer(colorBYTE* data);//host only
+
+	//host only
+	void copyToBuffer(colorBYTE* data);
+	void copyToBuffer(colorBYTE* data, unsigned short width, unsigned short height);//scale
 
 	~texture();
 };

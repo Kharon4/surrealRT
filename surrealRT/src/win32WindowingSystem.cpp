@@ -107,7 +107,7 @@ window::window(HINSTANCE hInstance, int nCmdShow, LPCWSTR title, short X, short 
 	x = X;
 	y = Y;
 	Title = title;
-	data = new BYTE[x * y * 3];
+	data = new BYTE[x * y * 4];
 
 	dHBMP = nullptr;
 	sHBMP = nullptr;
@@ -180,8 +180,8 @@ void window::draw() {
 
 void window::update() {
 	//bitmap with the data
-	Gdiplus::Bitmap bmp(x, y, 4 * ((x * 24 + 31) / 32), PixelFormat24bppRGB, data);//
-	
+	//Gdiplus::Bitmap bmp(x, y, 4 * ((x * 24 + 31) / 32), PixelFormat24bppRGB, data);//
+	Gdiplus::Bitmap bmp(x, y, x*4, PixelFormat32bppRGB, data);//
 	//delete hBitmap
 	DeleteObject(*dHBMP);//
 	//get hBitmap from bitmap

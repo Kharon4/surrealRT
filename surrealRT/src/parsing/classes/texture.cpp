@@ -52,7 +52,7 @@ texture::texture(std::string fileName, commonMemType type) {
 	rect.Height = y;
 
 	BitmapData data;
-	bmp.LockBits(&rect, ImageLockMode::ImageLockModeRead,PixelFormat24bppRGB,&data);
+	bmp.LockBits(&rect, ImageLockMode::ImageLockModeRead,PixelFormat32bppRGB,&data);
 
 	//collect data
 	for (size_t i = 0; i < size; ++i) {
@@ -81,6 +81,16 @@ void texture::copyToBuffer(colorBYTE* data) {
 
 	for (size_t i = 0; i < size; ++i)data[i] = hPtr[i];
 }
+
+void texture::copyToBuffer(colorBYTE* data, unsigned short width, unsigned short height) {
+	colorBYTE* hPtr = Data->getHost();
+	for (unsigned int i = 0; i < height; ++i) {
+		for (unsigned int j = 0; j < width; ++j) {
+			data[i * width + j] = hPtr[((j * x) / width) + ((i * y) / height) * x];
+		}
+	}
+}
+
 
 
 texture::~texture() {

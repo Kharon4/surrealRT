@@ -7,5 +7,5 @@ typedef vec3f color;//x=r , y=g , z=b
 typedef unsigned char BYTE;
 
 struct colorBYTE {
-	BYTE b, g, r;
+	BYTE b, g, r, n;
 };
