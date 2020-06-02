@@ -55,20 +55,12 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
-	int x = 720, y = 480;
-	texture tex(x, y, commonMemType::both);
-	{
-		colorBYTE* tempPtr = tex.getHostPtr();
-		for (int i = 0; i < x * y; ++i) {
-			tempPtr[i].r = 0;
-			tempPtr[i].g = 50;
-			tempPtr[i].b = 90;
-		}
-	}
+	int x = 720, y = 420;
+	//texture tex("res/kharon4.png",commonMemType::both);
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
-	tex.copyToBuffer((colorBYTE*)w1.data);
+	//tex.copyToBuffer((colorBYTE*)w1.data);
 	w1.update();
-	system("pause");
+	//system("pause");
 
 	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y) / x));
 	manipulation3dD::transform t, tDr;

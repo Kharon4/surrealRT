@@ -4,6 +4,19 @@
 #include <gdiplus.h>
 #include <gdiplusheaders.h>
 
+//string conversion
+#include <codecvt>
+#include <locale>
+
+
+//testing
+#include <iostream>
+
+
+
+using namespace Gdiplus;
+
+
 texture::texture(unsigned short X, unsigned short Y, commonMemType type) {
 	x = X;
 	y = Y;
@@ -11,8 +24,42 @@ texture::texture(unsigned short X, unsigned short Y, commonMemType type) {
 	Data = new commonMemory<colorBYTE>(((size_t)x)*y, type);
 }
 
-texture::texture(std::string fileName, commonMemType type = commonMemType::both) {
-	 
+using convert_t = std::codecvt_utf8<wchar_t>;
+std::wstring_convert<convert_t, wchar_t> strconverter;
+
+std::wstring to_wstring(std::string str)
+{
+	return strconverter.from_bytes(str);
+}
+
+
+texture::texture(std::string fileName, commonMemType type) {
+	Gdiplus::Bitmap bmp(to_wstring(fileName).c_str());
+	x = bmp.GetWidth();
+	y = bmp.GetHeight();
+
+	//create common Mem
+	Data = new commonMemory<colorBYTE>(((size_t)x) * y, type);
+
+	//save Data
+
+	size_t size = (size_t)(x)*y;
+	colorBYTE* hPtr = Data->getHost();
+	Gdiplus::Rect rect;
+	rect.X = 0;
+	rect.Y = 0;
+	rect.Width = x;
+	rect.Height = y;
+
+	BitmapData data;
+	bmp.LockBits(&rect, ImageLockMode::ImageLockModeRead,PixelFormat24bppRGB,&data);
+
+	//collect data
+	for (size_t i = 0; i < size; ++i) {
+		hPtr[i] = ((colorBYTE*)(data.Scan0))[i];
+	}
+
+	bmp.UnlockBits(&data);
 }
 
 
@@ -29,10 +76,10 @@ colorBYTE* texture::getHostPtr() {
 
 
 void texture::copyToBuffer(colorBYTE* data) {
-	size_t size = x * y;
+	size_t size = (size_t)(x) * y;
 	colorBYTE* hPtr = getHostPtr();
 
-	for (size_t i = 0; i < x * y; ++i)data[i] = hPtr[i];
+	for (size_t i = 0; i < size; ++i)data[i] = hPtr[i];
 }
 
 

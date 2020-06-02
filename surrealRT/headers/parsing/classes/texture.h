@@ -4,6 +4,8 @@
 #include <string>
 
 
+#pragma comment (lib,"Gdiplus.lib")
+
 class texture {
 private:
 	unsigned short x, y;
