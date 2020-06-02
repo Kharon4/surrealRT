@@ -300,3 +300,18 @@ void input::update() {
 	deltaTime = time / 1000.0;
 	time = temp;
 }
+
+
+unsigned char input::asyncGetch(unsigned int minWaitTimeMS) {
+	while(1){
+		update();
+		//scan entire buffer
+		for (short i = 0; i < 256; ++i) {
+			if (isDown[i])return i;
+		}
+		//sleep
+		std::chrono::milliseconds ms(minWaitTimeMS);
+		std::this_thread::sleep_for(ms);
+	}
+
+}

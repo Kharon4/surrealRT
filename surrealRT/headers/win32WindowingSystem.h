@@ -70,4 +70,5 @@ public:
 	static void hideCursor();
 	static void showCursor();
 	
+	static unsigned char asyncGetch(unsigned int minWaitTimeMS = 100);
 };
