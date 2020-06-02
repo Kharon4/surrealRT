@@ -6,6 +6,8 @@
 #include "win32WindowingSystem.h"
 #include "rendering.cuh"
 #include "parsing/parsingAlgos/obj.h"
+#include "parsing/classes/texture.h"
+
 
 bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
 	float rSpeed = -0.05;
@@ -54,14 +56,19 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
 	int x = 720, y = 480;
-	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
-	for (int i = 0; i < x * y; ++i) {
-		w1.data[i * 3 + 0] = 70;
-		w1.data[i * 3 + 1] = 0;
-		w1.data[i * 3 + 2] = 70;
+	texture tex(x, y, commonMemType::both);
+	{
+		colorBYTE* tempPtr = tex.getHostPtr();
+		for (int i = 0; i < x * y; ++i) {
+			tempPtr[i].r = 0;
+			tempPtr[i].g = 50;
+			tempPtr[i].b = 90;
+		}
 	}
+	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
+	tex.copyToBuffer((colorBYTE*)w1.data);
 	w1.update();
-
+	system("pause");
 
 	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y) / x));
 	manipulation3dD::transform t, tDr;

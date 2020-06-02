@@ -6,10 +6,20 @@
 
 class texture {
 private:
-public:
-	texture(unsigned short x , unsigned short y);
-	texture(std::string fileName);
+	unsigned short x, y;
 
+	commonMemory<colorBYTE>* Data = nullptr;
+public:
+	texture(unsigned short X , unsigned short Y, commonMemType type = commonMemType::both);
+	texture(std::string fileName, commonMemType type = commonMemType::both);
+
+	unsigned short getWidth();
+	unsigned short getHeight();
 	
+	colorBYTE* getDevicePtr();
+	colorBYTE* getHostPtr();
+
+	void copyToBuffer(colorBYTE* data);//host only
+
 	~texture();
 };
