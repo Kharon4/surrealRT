@@ -26,5 +26,9 @@ public:
 	void copyToBuffer(colorBYTE* data);
 	void copyToBuffer(colorBYTE* data, unsigned short width, unsigned short height);//scale
 
+	//host only crop
+	void copyToBufferCrop(color* data, unsigned short xL, unsigned short yL, unsigned short xM, unsigned short yM);
+
+
 	~texture();
 };
