@@ -60,7 +60,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	tex.copyToBuffer((colorBYTE*)w1.data,x,y);
 	w1.update();
-	input::asyncGetch();
 
 	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y) / x));
 	manipulation3dD::transform t, tDr;
@@ -77,6 +76,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	color testColor;
 	testColor = vec3f(100, 25, 25);
 	shadedSolidColCPU col(testColor, testColor / 500, vec3d(1, 2, 3));
+	std::cout << "hello\n";
 	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr());
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;

@@ -4,6 +4,9 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+//debugging
+#include <iostream>
+
 
 template <typename T>
 commonMemory<T>::commonMemory(size_t Size, commonMemType Type) {
@@ -101,8 +104,11 @@ commonMemType commonMemory<T>::getMemType() {
 }
 
 
+
+
 template <typename T>
-void commonMemory<T>::operator= (const commonMemory<T>& other) {
+void commonMemory<T>::shallowCopy(commonMemory<T>& other) {
+
 	//delete stuff
 	if (hostPtr != nullptr)delete[] hostPtr;
 	if (devicePtr != nullptr)cudaFree(devicePtr);
@@ -120,6 +126,55 @@ void commonMemory<T>::operator= (const commonMemory<T>& other) {
 	other.devicePtr = nullptr;
 
 }
+
+template <typename T>
+void commonMemory<T>::deepCopy(const commonMemory<T>& other) {
+
+	//delete stuff
+	if (hostPtr != nullptr)delete[] hostPtr;
+	if (devicePtr != nullptr)cudaFree(devicePtr);
+
+	//update stuff
+	hostUpdated = other.hostUpdated;
+	noElements = other.noElements;
+	size = other.size;
+	type = other.type;
+
+	//allocate and copy mem
+	if (type == commonMemType::hostOnly) {
+		//allocate mem
+		hostPtr = new unsigned char[size];
+		//copy data
+		for (size_t i = 0; i < noElements; ++i) {
+			((T*)hostPtr)[i] = ((T*)other.hostPtr)[i];
+		}
+	}
+	else if (type == commonMemType::deviceOnly) {
+		//allocate mem
+		cudaMalloc(&devicePtr, size);
+		//copy data
+		cudaMemcpy(devicePtr, other.devicePtr, size, cudaMemcpyKind::cudaMemcpyDeviceToDevice);
+	}
+	else {
+		//host side
+
+		//allocate mem
+		hostPtr = new unsigned char[size];
+		//copy data
+		for (size_t i = 0; i < noElements; ++i) {
+			((T*)hostPtr)[i] = ((T*)other.hostPtr)[i];
+		}
+
+		//device side
+
+		//allocate mem
+		cudaMalloc(&devicePtr, size);
+		//copy data
+		cudaMemcpy(devicePtr, other.devicePtr, size, cudaMemcpyKind::cudaMemcpyDeviceToDevice);
+
+	}
+}
+
 
 template <typename T>
 commonMemory<T>::~commonMemory() {
