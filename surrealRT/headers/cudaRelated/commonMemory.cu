@@ -4,6 +4,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+
 template <typename T>
 commonMemory<T>::commonMemory(size_t Size, commonMemType Type) {
 	noElements = Size;
@@ -99,6 +100,26 @@ commonMemType commonMemory<T>::getMemType() {
 	return type;
 }
 
+
+template <typename T>
+void commonMemory<T>::operator= (const commonMemory<T>& other) {
+	//delete stuff
+	if (hostPtr != nullptr)delete[] hostPtr;
+	if (devicePtr != nullptr)cudaFree(devicePtr);
+
+	//copy stuff
+	hostPtr = other.hostPtr;
+	devicePtr = other.devicePtr;
+	hostUpdated = other.hostUpdated;
+	noElements = other.noElements;
+	size = other.size; 
+	type = other.type;
+
+	//dissable other
+	other.hostPtr = nullptr;
+	other.devicePtr = nullptr;
+
+}
 
 template <typename T>
 commonMemory<T>::~commonMemory() {

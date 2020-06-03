@@ -4,8 +4,8 @@ enum commonMemType { hostOnly, deviceOnly, both };
 template <typename T>
 class commonMemory {
 private:
-	void* hostPtr = nullptr;
-	void* devicePtr = nullptr;
+	mutable void* hostPtr = nullptr;
+	mutable void* devicePtr = nullptr;
 	bool hostUpdated = true;
 	size_t noElements;
 	size_t size;
@@ -22,6 +22,8 @@ public:
 	void changeMemType(commonMemType newType);
 	commonMemType getMemType();
 
+	void operator= (const commonMemory& other);
+	commonMemory(const commonMemory& other) { (*this) = other; }
 
 	~commonMemory();
 };
