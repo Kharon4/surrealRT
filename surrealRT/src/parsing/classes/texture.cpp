@@ -74,21 +74,55 @@ colorBYTE* texture::getHostPtr() {
 	return (Data->getHost());
 }
 
+void texture::changeTextureResidance(commonMemType type) {
+	Data->changeMemType(type);
+}
+
 
 void texture::copyToBuffer(colorBYTE* data) {
 	size_t size = (size_t)(x) * y;
 	colorBYTE* hPtr = getHostPtr();
-
+	if (hPtr == nullptr)return;
 	for (size_t i = 0; i < size; ++i)data[i] = hPtr[i];
 }
 
 void texture::copyToBuffer(colorBYTE* data, unsigned short width, unsigned short height) {
 	colorBYTE* hPtr = Data->getHost();
+	if (hPtr == nullptr)return;
 	for (unsigned int i = 0; i < height; ++i) {
 		for (unsigned int j = 0; j < width; ++j) {
 			data[i * width + j] = hPtr[((j * x) / width) + ((i * y) / height) * x];
 		}
 	}
+}
+
+void texture::copyToBufferCrop(colorBYTE* data, unsigned short xL, unsigned short yL, unsigned short xM, unsigned short yM) {
+	colorBYTE* hPtr = Data->getHost();
+	if (hPtr == nullptr)return;
+	
+	hPtr += (long int)xL + ((long int)yL) * x;
+
+	yM -= yL;
+	xM -= xL;
+
+	for(int i = 0 ; i < yM ; ++i)
+		for (int j = 0; j < xM; ++j) {
+			data[j + i * xM] = hPtr[j + i * x];
+		}
+}
+
+void texture::copyToBufferCrop(colorBYTE* data, unsigned short xL, unsigned short yL, unsigned short xM, unsigned short yM, unsigned short width, unsigned short height) {
+	colorBYTE* hPtr = Data->getHost();
+	if (hPtr == nullptr)return;
+
+	hPtr += (long int)xL + ((long int)yL) * x;
+
+	yM -= yL;
+	xM -= xL;
+	for (int i = 0; i < height; ++i)
+		for (int j = 0; j < width; ++j) {
+			data[j + i * width] = hPtr[((long int)(j*xM))/width + (((long int)(i*yM))/height) * x];
+		}
 }
 
 
