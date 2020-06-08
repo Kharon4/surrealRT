@@ -4,7 +4,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
-#define commonMemDebugging
+//#define commonMemDebugging
 
 #ifdef  commonMemDebugging
 //debugging
