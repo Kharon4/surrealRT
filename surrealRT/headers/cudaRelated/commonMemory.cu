@@ -4,8 +4,13 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 
+#define commonMemDebugging
+
+#ifdef  commonMemDebugging
 //debugging
 #include <iostream>
+#endif //  commonMemDebugging
+
 
 
 template <typename T>
@@ -109,6 +114,9 @@ commonMemType commonMemory<T>::getMemType() {
 template <typename T>
 void commonMemory<T>::shallowCopy(commonMemory<T>& other) {
 
+#ifdef  commonMemDebugging
+	std::cout << "shallow copy made\n";
+#endif
 	//delete stuff
 	if (hostPtr != nullptr)delete[] hostPtr;
 	if (devicePtr != nullptr)cudaFree(devicePtr);
@@ -130,6 +138,9 @@ void commonMemory<T>::shallowCopy(commonMemory<T>& other) {
 template <typename T>
 void commonMemory<T>::deepCopy(const commonMemory<T>& other) {
 
+#ifdef  commonMemDebugging
+	std::cout << "deep copy made\n";
+#endif
 	//delete stuff
 	if (hostPtr != nullptr)delete[] hostPtr;
 	if (devicePtr != nullptr)cudaFree(devicePtr);

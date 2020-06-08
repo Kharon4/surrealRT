@@ -62,6 +62,42 @@ texture::texture(std::string fileName, commonMemType type) {
 	bmp.UnlockBits(&data);
 }
 
+void texture::operator= (texture&& other) {
+	x = other.x;
+	y = other.y;
+	if (Data == nullptr) {
+		Data = new commonMemory<colorBYTE>(0);
+	}
+	(*Data) = std::move(*other.Data);
+}
+
+void texture::operator= (const texture& other) {
+	x = other.x;
+	y = other.y;
+	if (Data == nullptr) {
+		Data = new commonMemory<colorBYTE>(0);
+	}
+	(*Data) = (*other.Data);
+}
+
+texture::texture(texture&& other) {
+	x = other.x;
+	y = other.y;
+	if (Data == nullptr) {
+		Data = new commonMemory<colorBYTE>(0);
+	}
+	(*Data) = std::move(*other.Data);
+}
+
+texture::texture(const texture& other) {
+	x = other.x;
+	y = other.y;
+	if (Data == nullptr) {
+		Data = new commonMemory<colorBYTE>(0);
+	}
+	(*Data) = (*other.Data);
+}
+
 
 unsigned short texture::getWidth() { return x; }
 unsigned short texture::getHeight() { return y; }
@@ -128,5 +164,6 @@ void texture::copyToBufferCrop(colorBYTE* data, unsigned short xL, unsigned shor
 
 
 texture::~texture() {
+	std::cout << "destructor called\n";
 	delete Data;
 }

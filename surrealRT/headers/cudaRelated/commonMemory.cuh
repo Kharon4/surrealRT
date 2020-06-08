@@ -27,10 +27,10 @@ public:
 	commonMemType getMemType();
 
 	inline void operator= (commonMemory&& other) { shallowCopy(other); }//move constructor
-	inline void operator= (commonMemory& other) { deepCopy(other); }//copy constructor
+	inline void operator= (const commonMemory& other) { deepCopy(other); }//copy constructor
 	
 	inline commonMemory(commonMemory&& other) { shallowCopy(other); }//move constructor
-	inline commonMemory(commonMemory& other) { deepCopy(other); }//copy constructor
+	inline commonMemory(const commonMemory& other) { deepCopy(other); }//copy constructor
 
 	~commonMemory();
 };

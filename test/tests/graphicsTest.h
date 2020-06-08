@@ -56,11 +56,11 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
 	int x = 720, y = 480;
-	texture tex("res/kharon4.png",commonMemType::both);
+	texture tex("res/kharon4_1.png", commonMemType::both);
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
-	tex.copyToBuffer((colorBYTE*)w1.data,x,y);
+	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
 	w1.update();
-
+	input::asyncGetch();
 	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y) / x));
 	manipulation3dD::transform t, tDr;
 	t.CS.setOrigin(c.vertex);
@@ -80,9 +80,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr());
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
-
 	graphicalWorld world(&temp);
-
 	while (updateCam(t, tDr) && (!w1.isWindowClosed())) {
 		unsigned long long start, uTime;
 		start = input::micros();
