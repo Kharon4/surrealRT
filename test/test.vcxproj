@@ -97,7 +97,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)test\tests;$(SolutionDir)test\CPURTX\headers;$(CUDA_PATH)\include;$(SolutionDir)surrealRT\headers;$(SolutionDir)includes\math3D_CUDA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)test\tests;$(CUDA_PATH)\include;$(SolutionDir)surrealRT\headers;$(SolutionDir)submodules\math3D\math3D_CUDA\headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -115,7 +115,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)test\tests;$(SolutionDir)test\CPURTX\headers;$(CUDA_PATH)\include;$(SolutionDir)surrealRT\headers;$(SolutionDir)includes\math3D_CUDA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)test\tests;$(CUDA_PATH)\include;$(SolutionDir)surrealRT\headers;$(SolutionDir)submodules\math3D\math3D_CUDA\headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -131,7 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)test\tests;$(SolutionDir)test\CPURTX\headers;$(CUDA_PATH)\include;$(SolutionDir)surrealRT\headers;$(SolutionDir)includes\math3D_CUDA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)test\tests;$(CUDA_PATH)\include;$(SolutionDir)surrealRT\headers;$(SolutionDir)submodules\math3D\math3D_CUDA\headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -149,7 +149,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)test\tests;$(SolutionDir)test\CPURTX\headers;$(CUDA_PATH)\include;$(SolutionDir)surrealRT\headers;$(SolutionDir)includes\math3D_CUDA;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)test\tests;$(CUDA_PATH)\include;$(SolutionDir)surrealRT\headers;$(SolutionDir)submodules\math3D\math3D_CUDA\headers;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
