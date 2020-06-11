@@ -164,6 +164,5 @@ void texture::copyToBufferCrop(colorBYTE* data, unsigned short xL, unsigned shor
 
 
 texture::~texture() {
-	std::cout << "destructor called\n";
 	delete Data;
 }
