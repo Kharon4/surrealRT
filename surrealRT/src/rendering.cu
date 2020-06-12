@@ -10,7 +10,7 @@
 #define blockNo(Threads) ((Threads/threadNo) + 1)
 
 __global__
-void initRays(short xRes , short yRes , vec3d vertex , vec3d topLeft , vec3d right , vec3d down , linearMathD::line * rays) {
+void initRays(short xRes , short yRes , vec3d vertex , vec3d topLeft , vec3d right , vec3d down , linearMath::lineD * rays) {
 	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 	if (tId >= (xRes * yRes))return;
 	
@@ -37,17 +37,17 @@ void initMesh(meshShaded* Mesh, meshConstrained* meshC, size_t noOfThreads) {
 }
 
 __device__ __host__
-void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMathD::line ray, size_t noTrs,  meshShaded * &OUTmesh, meshConstrained * &OUTMeshC , double& OUTlambda, vec3d& OUTpt) {
+void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMath::lineD ray, size_t noTrs,  meshShaded * &OUTmesh, meshConstrained * &OUTMeshC , double& OUTlambda, vec3d& OUTpt) {
 	OUTmesh = nullptr;
 	OUTMeshC = nullptr;
 	OUTlambda = -1;
 	double tempDist;
 	for (size_t i = 0; i < noTrs; ++i) {
-		linearMathD::intersectionLambdaRaw_s(ray, linearMathD::plane(Mesh[i].M.pts[0], meshC[i].planeNormal), tempDist);
+		linearMath::intersectionLambdaRaw_s(ray, linearMath::planeD(Mesh[i].M.pts[0], meshC[i].planeNormal), tempDist);
 		//check for visibility
 		if (tempDist > 0 && (tempDist < OUTlambda || OUTlambda < 0)) {
 			//check for inside
-			vec3d pt = linearMathD::getPt(ray, tempDist);
+			vec3d pt = linearMath::getPt(ray, tempDist);
 			if (vec3d::dot(pt - Mesh[i].M.pts[0], meshC[i].sidePlaneNormals[0]) < 0)continue;
 			if (vec3d::dot(pt - Mesh[i].M.pts[1], meshC[i].sidePlaneNormals[1]) < 0)continue;
 			if (vec3d::dot(pt - Mesh[i].M.pts[2], meshC[i].sidePlaneNormals[2]) < 0)continue;
@@ -62,7 +62,7 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMat
 }
 
 __global__
-void getIntersections(linearMathD::line* rays, size_t noRays, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* displayData, chromaticShader* defaultShader) {
+void getIntersections(linearMath::lineD* rays, size_t noRays, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* displayData, chromaticShader* defaultShader) {
 	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 	if (tId >= noRays)return;
 
@@ -123,9 +123,9 @@ void generateGPUDisplatData(colorBYTE** data , camera cam) {
 
 void renderIntermediate(camera cam,colorBYTE* DataByte, meshShaded* meshS, meshConstrained* meshC, size_t noTrs) {
 	displayCudaError(9);
-	linearMathD::line* rays;
+	linearMath::lineD* rays;
 	displayCudaError(8);
-	cudaMalloc(&rays, sizeof(linearMathD::line) * cam.sc.resX * cam.sc.resY);
+	cudaMalloc(&rays, sizeof(linearMath::lineD) * cam.sc.resX * cam.sc.resY);
 	displayCudaError(7);
 	initRays << <blockNo(cam.sc.resX * cam.sc.resY), threadNo >> > (cam.sc.resX, cam.sc.resY, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
 	displayCudaError(1);

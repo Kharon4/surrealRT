@@ -15,7 +15,7 @@ struct intersectionParam {
 
 struct fragmentProperties {
 	short camX, camY;
-	linearMathD::line *ray;
+	linearMath::line<double> *ray;
 	intersectionParam ip;
 };
 
