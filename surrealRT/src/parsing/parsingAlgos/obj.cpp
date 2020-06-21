@@ -6,7 +6,7 @@
 
 using namespace std;
 
-commonMemory<meshShaded> loadModel(std::string fileNameWithExtension,chromaticShader* shader) {
+commonMemory<meshShaded> loadModel(std::string fileNameWithExtension,chromaticShader* shader, loadAxisExchange vertexAxis) {
 	ifstream file(fileNameWithExtension.c_str(), ios::in);
 	vector<vec3f> vertices;
 	vector<meshShaded> mesh;
@@ -16,7 +16,30 @@ commonMemory<meshShaded> loadModel(std::string fileNameWithExtension,chromaticSh
 
 		if(line == "v"){
 			vec3f vertex;
-			file >> vertex.x >> vertex.y >> vertex.z;
+			switch (vertexAxis)
+			{
+			case loadAxisExchange::xyz:
+				file >> vertex.x >> vertex.y >> vertex.z;
+				break;
+			case loadAxisExchange::xzy:
+				file >> vertex.x >> vertex.z >> vertex.y;
+				break;
+			case loadAxisExchange::yxz:
+				file >> vertex.y >> vertex.x >> vertex.z;
+				break;
+			case loadAxisExchange::yzx:
+				file >> vertex.y >> vertex.z >> vertex.x;
+				break;
+			case loadAxisExchange::zxy:
+				file >> vertex.z >> vertex.x >> vertex.y;
+				break;
+			case loadAxisExchange::zyx:
+				file >> vertex.z >> vertex.y >> vertex.x;
+				break;
+			default:
+				//throw error
+				break;
+			}
 			vertices.push_back(vertex);
 		}
 		else if (line == "f") {
