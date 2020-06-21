@@ -19,9 +19,18 @@ struct fragmentProperties {
 	intersectionParam ip;
 };
 
+enum class meshVisibilityProperties : unsigned char {
+	inActive = 0,
+	frontActive = 1,
+	frontBackActive = 2,
+	backActive = 3
+};
+
+
 class chromaticShader {
 public:
-	__device__ chromaticShader() {}
+	meshVisibilityProperties meshVProp;
+	__device__ chromaticShader() { meshVProp = meshVisibilityProperties::frontActive; }
 	__device__ ~chromaticShader(){}
 	__device__ virtual color shade(fragmentProperties& sd) { return color{ 0,0,0 }; }
 };

@@ -5,7 +5,7 @@
 
 #include <string>
 
-enum class loadAxisExchange
+enum class loadAxisExchange : unsigned char
 {
 	xyz = 0, // inhouse scheme
 	xzy = 1, // blender

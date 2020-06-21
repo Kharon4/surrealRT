@@ -55,7 +55,7 @@ bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
-	int x = 720, y = 480;
+	int x = 1080, y = 720;
 	texture tex("res/kharon4.png", commonMemType::both);
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
@@ -77,7 +77,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	testColor = vec3f(100, 100, 100);
 	shadedSolidColCPU col(testColor, testColor / 500, vec3f(1, 2, 3));
 	std::cout << "hello\n";
-	commonMemory<meshShaded> temp = loadModel("res/monkey.obj", col.getGPUPtr(),loadAxisExchange::xzy);
+	std::cout << "size of loadAxisExchange = " << sizeof(loadAxisExchange) << std::endl;
+	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr(),loadAxisExchange::xzy);
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	graphicalWorld world(&temp);
