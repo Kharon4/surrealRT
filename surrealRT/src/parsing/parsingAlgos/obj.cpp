@@ -8,14 +8,14 @@ using namespace std;
 
 commonMemory<meshShaded> loadModel(std::string fileNameWithExtension,chromaticShader* shader) {
 	ifstream file(fileNameWithExtension.c_str(), ios::in);
-	vector<vec3d> vertices;
+	vector<vec3f> vertices;
 	vector<meshShaded> mesh;
 	while (!file.eof()) {
 		string line;
 		file >> line;
 
 		if(line == "v"){
-			vec3d vertex;
+			vec3f vertex;
 			file >> vertex.x >> vertex.y >> vertex.z;
 			vertices.push_back(vertex);
 		}

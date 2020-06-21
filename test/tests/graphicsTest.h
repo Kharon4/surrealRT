@@ -9,7 +9,7 @@
 #include "parsing/classes/texture.h"
 
 
-bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly) {
+bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly) {
 	float rSpeed = -0.05;
 	float mSpeed = 2;
 
@@ -23,20 +23,20 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 		input::lockY = input::mouseY;
 	}
 
-	vec3d displacement(0, 0, 0);
+	vec3f displacement(0, 0, 0);
 
 	if (input::isDown['W'])
-		displacement += vec3d(1, 0, 0);
+		displacement += vec3f(1, 0, 0);
 	if (input::isDown['S'])
-		displacement -= vec3d(1, 0, 0);
+		displacement -= vec3f(1, 0, 0);
 	if (input::isDown['D'])
-		displacement -= vec3d(0, 1, 0);
+		displacement -= vec3f(0, 1, 0);
 	if (input::isDown['A'])
-		displacement += vec3d(0, 1, 0);
+		displacement += vec3f(0, 1, 0);
 	if (input::isDown['E'])
-		displacement += vec3d(0, 0, 1);
+		displacement += vec3f(0, 0, 1);
 	if (input::isDown['Q'])
-		displacement -= vec3d(0, 0, 1);
+		displacement -= vec3f(0, 0, 1);
 
 	displacement.normalize();
 
@@ -45,8 +45,8 @@ bool updateCam(manipulation3dD::transform& t, manipulation3dD::transform& rOnly)
 
 	if (input::lock) {
 		input::hideCursor();
-		t.CS.setAngle(t.CS.getAngle() + vec3d(rSpeed * input::changeX, rSpeed * input::changeY, 0) * input::deltaTime);
-		rOnly.CS.setAngle(t.CS.getAngle() + vec3d(rSpeed * input::changeX, rSpeed * input::changeY, 0) * input::deltaTime);
+		t.CS.setAngle(t.CS.getAngle() + vec3f(rSpeed * input::changeX, rSpeed * input::changeY, 0) * input::deltaTime);
+		rOnly.CS.setAngle(t.CS.getAngle() + vec3f(rSpeed * input::changeX, rSpeed * input::changeY, 0) * input::deltaTime);
 	}
 	t.update();
 	rOnly.update();
@@ -61,13 +61,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
 	w1.update();
 	input::asyncGetch();
-	camera c(vec3d(0, -1, 0), x, y, vec3d(0, 0, 0), vec3d(1, 0, 0), vec3d(0, 0, ((float)y) / x));
-	manipulation3dD::transform t, tDr;
+	camera c(vec3f(0, -1, 0), x, y, vec3f(0, 0, 0), vec3f(1, 0, 0), vec3f(0, 0, ((float)y) / x));
+	manipulation3dF::transform t, tDr;
 	t.CS.setOrigin(c.vertex);
-	t.CS.setScale(vec3d(1, 1, 1));
-	t.CS.setAngle(vec3d(pi / 2, 0, 0));
-	tDr.CS.setScale(vec3d(1, 1, 1));
-	tDr.CS.setAngle(vec3d(pi / 2, 0, 0));
+	t.CS.setScale(vec3f(1, 1, 1));
+	t.CS.setAngle(vec3f(pi / 2, 0, 0));
+	tDr.CS.setScale(vec3f(1, 1, 1));
+	tDr.CS.setAngle(vec3f(pi / 2, 0, 0));
 
 	t.addVec(c.vertex, &c.vertex);
 	t.addVec(c.sc.screenCenter, &c.sc.screenCenter);
@@ -75,12 +75,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
 	color testColor;
 	testColor = vec3f(100, 25, 25);
-	shadedSolidColCPU col(testColor, testColor / 500, vec3d(1, 2, 3));
+	shadedSolidColCPU col(testColor, testColor / 500, vec3f(1, 2, 3));
 	std::cout << "hello\n";
 	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr());
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	graphicalWorld world(&temp);
+	
+
 	while (updateCam(t, tDr) && (!w1.isWindowClosed())) {
 		unsigned long long start, uTime;
 		start = input::micros();

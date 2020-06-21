@@ -1,6 +1,6 @@
 #include "camera.cuh"
 
-screen::screen(short xRes, short yRes, vec3d ScCenter, vec3d hfRight, vec3d hfUp) {
+screen::screen(short xRes, short yRes, vec3f ScCenter, vec3f hfRight, vec3f hfUp) {
 	resX = xRes;
 	resY = yRes;
 	screenCenter = ScCenter;
@@ -9,7 +9,7 @@ screen::screen(short xRes, short yRes, vec3d ScCenter, vec3d hfRight, vec3d hfUp
 }
 
 
-camera::camera(vec3d Vertex ,short xRes, short yRes, vec3d ScCenter, vec3d hfRight, vec3d hfUp) {
+camera::camera(vec3f Vertex ,short xRes, short yRes, vec3f ScCenter, vec3f hfRight, vec3f hfUp) {
 	vertex = Vertex;
 	sc = screen(xRes, yRes, ScCenter, hfRight, hfUp);
 }
