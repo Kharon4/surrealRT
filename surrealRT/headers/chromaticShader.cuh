@@ -19,11 +19,11 @@ struct fragmentProperties {
 	intersectionParam ip;
 };
 
-enum class meshVisibilityProperties : unsigned char {
+enum class meshVisibilityProperties : signed char {
 	inActive = 0,
-	frontActive = 1,
+	frontActive = -1,//dont make +ve
 	frontBackActive = 2,
-	backActive = 3
+	backActive = 1//dont make -ve
 };
 
 

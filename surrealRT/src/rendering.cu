@@ -44,41 +44,27 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMat
 	double tempDist;
 	for (size_t i = 0; i < noTrs; ++i) {
 		
-		switch (Mesh[i].colShader->meshVProp)
-		{
-		case (meshVisibilityProperties::inActive):
+		if (Mesh[i].colShader->meshVProp == meshVisibilityProperties::inActive) {
 			tempDist = -1;
-			break;
-		case (meshVisibilityProperties::frontActive):
-			{	
-				float dotCalculated = vec3f::dot(ray.getDr(), meshC[i].planeNormal);
-				if (dotCalculated > 0) {
-					tempDist = vec3f::dot(Mesh[i].M.pts[0] - ray.getPt(), meshC[i].planeNormal) / dotCalculated;
-				}
-				else tempDist = -1;
-			}
-			break;
-
-		case (meshVisibilityProperties::backActive):
-			{
-				float dotCalculated = vec3f::dot(ray.getDr(), meshC[i].planeNormal);
-				if (dotCalculated < 0) {
-					tempDist = vec3f::dot(Mesh[i].M.pts[0] - ray.getPt(), meshC[i].planeNormal) / dotCalculated;
-				}
-				else tempDist = -1;
-			}
-				break;
-		case (meshVisibilityProperties::frontBackActive):
-			{
-				float dotCalculated = vec3f::dot(ray.getDr(), meshC[i].planeNormal);
-				if (dotCalculated != 0) {
-					tempDist = vec3f::dot(Mesh[i].M.pts[0] - ray.getPt(), meshC[i].planeNormal) / dotCalculated;
-				}
-				else tempDist = -1;
-			}
-			break;
-
 		}
+		else {
+			bool calc = false;
+			float dotCalculated = vec3f::dot(ray.getDr(), meshC[i].planeNormal);
+			if (Mesh[i].colShader->meshVProp == meshVisibilityProperties::frontBackActive) {
+				if (dotCalculated != 0)calc = true;
+			}
+			else {
+				if (dotCalculated * (signed char)Mesh[i].colShader->meshVProp < 0)calc = true;
+			}
+
+			if (calc) {
+				tempDist = vec3f::dot(Mesh[i].M.pts[0] - ray.getPt(), meshC[i].planeNormal) / dotCalculated;
+			}
+			else {
+				tempDist = -1;
+			}
+		}
+		
 
 
 		//check for visibility
