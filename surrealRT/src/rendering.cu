@@ -22,11 +22,29 @@ void initRays(short xRes , short yRes , vec3f vertex , vec3f topLeft , vec3f rig
 }
 
 __device__ __host__ void calculateMeshConstraints(mesh* Mesh , meshConstrained *meshC){
-	vec3f plNormal = vec3f::cross(Mesh->pts[1] - Mesh->pts[0], Mesh->pts[2] - Mesh->pts[0]);
+	meshC->a = Mesh->pts[1] - Mesh->pts[0];
+	vec3f b = Mesh->pts[2] - Mesh->pts[0];
+	vec3f plNormal = vec3f::cross(meshC->a, b);
 	meshC->planeNormal = vec3f::normalizeRaw_s(plNormal);
-	meshC->sidePlaneNormals[0] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[1] - Mesh->pts[0]));
-	meshC->sidePlaneNormals[1] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[2] - Mesh->pts[1]));
-	meshC->sidePlaneNormals[2] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[0] - Mesh->pts[2]));
+	meshC->sn = vec3f::normalizeRaw_s(vec3f::cross(meshC->planeNormal, meshC->a));
+
+	meshC->coordCalcData.x = vec3f::dot(meshC->sn, b);
+	meshC->coordCalcData.y = vec3f::dot(b, meshC->a);
+	meshC->coordCalcData.z = meshC->a.mag2();
+
+	if (meshC->coordCalcData.x == 0 || meshC->coordCalcData.z == 0) {
+		//do nothing
+	}
+	else {
+		meshC->coordCalcData.x = 1 / meshC->coordCalcData.x;
+		meshC->coordCalcData.z = 1 / meshC->coordCalcData.z;
+	}
+
+	//obsolete used was once used with side planes
+	//meshC->sidePlaneNormals[0] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[1] - Mesh->pts[0]));
+	//meshC->sidePlaneNormals[1] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[2] - Mesh->pts[1]));
+	//meshC->sidePlaneNormals[2] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[0] - Mesh->pts[2]));
+	
 }
 
 __global__
@@ -71,10 +89,22 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMat
 		if (tempDist > 0 && (tempDist < OUTlambda || OUTlambda < 0)) {
 			//check for inside
 			vec3f pt = linearMath::getPt(ray, tempDist);
-			if (vec3f::dot(pt - Mesh[i].M.pts[0], meshC[i].sidePlaneNormals[0]) < 0)continue;
-			if (vec3f::dot(pt - Mesh[i].M.pts[1], meshC[i].sidePlaneNormals[1]) < 0)continue;
-			if (vec3f::dot(pt - Mesh[i].M.pts[2], meshC[i].sidePlaneNormals[2]) < 0)continue;
+			vec3f v = pt - Mesh[i].M.pts[0];
+			float l1, l2;
+			l2 = vec3f::dot(v, meshC[i].sn) * meshC[i].coordCalcData.x;
+			l1 = (vec3f::dot(v, meshC[i].a) - l2 * meshC[i].coordCalcData.y) * meshC[i].coordCalcData.z;
+			
+			//obsolete used was once used with side planes
+			//if (vec3f::dot(pt - Mesh[i].M.pts[0], meshC[i].sidePlaneNormals[0]) < 0)continue;
+			//if (vec3f::dot(pt - Mesh[i].M.pts[1], meshC[i].sidePlaneNormals[1]) < 0)continue;
+			//if (vec3f::dot(pt - Mesh[i].M.pts[2], meshC[i].sidePlaneNormals[2]) < 0)continue;
+			
+			
 			//inside
+			if (!(l1 > 0))continue;
+			if (!(l2 > 0))continue;
+			if ((l1+l2 > 1))continue;
+
 			OUTlambda = tempDist;
 
 			OUTpt = pt;
