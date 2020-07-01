@@ -39,8 +39,10 @@ texture::texture(std::string fileName, commonMemType type) {
 	y = bmp.GetHeight();
 
 	//create common Mem
-	Data = new commonMemory<colorBYTE>(((size_t)x) * y, type);
-
+	if(type == commonMemType::deviceOnly)
+		Data = new commonMemory<colorBYTE>(((size_t)x) * y, commonMemType::both);
+	else
+		Data = new commonMemory<colorBYTE>(((size_t)x) * y, type);
 	//save Data
 
 	size_t size = (size_t)(x)*y;
@@ -60,6 +62,8 @@ texture::texture(std::string fileName, commonMemType type) {
 	}
 
 	bmp.UnlockBits(&data);
+
+	Data->changeMemType(type);
 }
 
 void texture::operator= (texture&& other) {
