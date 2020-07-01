@@ -37,7 +37,18 @@ public:
 	__device__ virtual color shade(fragmentProperties& sd) { return noneColor; }
 };
 
+//#define __NVCC__ //only for debugging
 
+#ifdef __NVCC__
+//unique name for function + initialization of shader object
+#define DefineForCompilation(name, ...)\
+void* _TEMP_FUNC_DEFINATION_FOR_COMPILATION##name(){\
+__VA_ARGS__ \
+return shader.getGPUPtr();\
+}
+#else
+#define DefineForCompilation(name, ...) ;
+#endif
 
 //more types
 
@@ -50,12 +61,7 @@ public:
 
 typedef CPUInstanceController<chromaticShader, disableShader> disableShaderCPU;
 
-#ifdef __NVCC__
-int fdisableShader() {
-	disableShaderCPU shader;
-	return (int)shader.getGPUPtr();
-}
-#endif // __NVCC__
+DefineForCompilation(disableShaderCPU, disableShaderCPU shader;)
 
 
 class solidColor : public chromaticShader {
@@ -69,14 +75,7 @@ public:
 
 typedef CPUInstanceController<chromaticShader, solidColor, color> solidColCPU;
 
-#ifdef __NVCC__
-int fSolicCol() {
-	color c;
-	solidColCPU shader(c);
-	shader.getGPUPtr();
-	return c.x;
-}
-#endif // __NVCC__
+DefineForCompilation(solidColCPU, color c; solidColCPU shader(c);)
 
 
 class shadedSolidColor : public chromaticShader {
@@ -100,14 +99,7 @@ public:
 
 typedef CPUInstanceController<chromaticShader, shadedSolidColor, color, color, vec3f> shadedSolidColCPU;
 
-#ifdef __NVCC__
-int fShadedSolicCol() {
-	color c;
-	shadedSolidColCPU shader(c,c,vec3f(0,0,0));
-	shader.getGPUPtr();
-	return c.x;
-}
-#endif // __NVCC__
+DefineForCompilation(shadedSolidColCPU, color c; shadedSolidColCPU shader(c, c, vec3f(0,0,0));)
 
 
 class skybox :public chromaticShader {
@@ -140,14 +132,9 @@ public:
 };
 
 typedef CPUInstanceController<chromaticShader, skybox, color, color, color, color, color, color> skyboxCPU;
-#ifdef __NVCC__
-int fSkybox() {
-	color c;
-	skyboxCPU shader(c, c, c, c, c, c);
-	shader.getGPUPtr();
-	return c.x;
-}
-#endif // __NVCC__
+
+DefineForCompilation(skyboxCPU, color c; skyboxCPU shader(c, c, c, c, c, c);)
+
 
 
 struct meshShaded {
