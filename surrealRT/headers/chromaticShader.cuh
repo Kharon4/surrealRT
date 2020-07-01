@@ -8,6 +8,7 @@
 
 struct intersectionParam {
 	float lambda;
+	float cx, cy;//local coordinates
 	vec3f pt;
 	meshConstrained* MC;
 	mesh* M;
@@ -136,6 +137,43 @@ typedef CPUInstanceController<chromaticShader, skybox, color, color, color, colo
 DefineForCompilation(skyboxCPU, color c; skyboxCPU shader(c, c, c, c, c, c);)
 
 
+class textureShader :public chromaticShader {
+public:
+	colorBYTE* data;
+	short ox, oy, xx, xy, yx, yy;
+	unsigned short textureWidth, textureHeight;
+	float max;
+	__device__ textureShader(colorBYTE* DATA,unsigned short Width,unsigned short Height, short Ox, short Oy, short Xx, short Xy, short Yx, short Yy,float Max) {
+		data = DATA;
+		ox = Ox; oy = Oy; xx = Xx - Ox; xy = Xy - Oy; yx = Yx - Ox; yy = Yy - Oy;
+		textureWidth = Width; textureHeight = Height; max = Max;
+	}
+
+	__device__ ~textureShader() {}
+
+	__device__ color shade(fragmentProperties& sd) {
+		int x = ox + xx * sd.ip.cx + yx * sd.ip.cy;
+		int y = oy + yy * sd.ip.cy + xy * sd.ip.cx;
+
+		if (x < 0)x = 0;
+		else if(x >= textureWidth) x = textureWidth - 1;
+
+		if (y < 0)y = 0;
+		else if (y >= textureHeight)y = textureHeight - 1;
+		colorBYTE cb = data[(y * textureWidth) + x];
+		color c;
+		c.x = cb.r * max;
+		c.y = cb.g * max;
+		c.z = cb.b * max;
+
+		return c;
+	}
+
+};
+
+typedef CPUInstanceController<chromaticShader, textureShader, colorBYTE*, unsigned short,unsigned  short, short, short, short, short, short, short,float> textureShaderCPU;
+
+DefineForCompilation(textureShaderCPU, unsigned short ui = 15; short i = 0; float f = 1.1; colorBYTE data; textureShaderCPU shader(&data, ui, ui, i, i, i, i, i, i, f);)
 
 struct meshShaded {
 	mesh M;

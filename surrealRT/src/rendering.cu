@@ -40,11 +40,6 @@ __device__ __host__ void calculateMeshConstraints(mesh* Mesh , meshConstrained *
 		meshC->coordCalcData.z = 1 / meshC->coordCalcData.z;
 	}
 
-	//obsolete used was once used with side planes
-	//meshC->sidePlaneNormals[0] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[1] - Mesh->pts[0]));
-	//meshC->sidePlaneNormals[1] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[2] - Mesh->pts[1]));
-	//meshC->sidePlaneNormals[2] = vec3f::normalizeRaw_s(vec3f::cross(plNormal, Mesh->pts[0] - Mesh->pts[2]));
-	
 }
 
 __global__
@@ -55,11 +50,13 @@ void initMesh(meshShaded* Mesh, meshConstrained* meshC, size_t noOfThreads) {
 }
 
 __device__ __host__
-void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMath::linef ray, size_t noTrs,  meshShaded * &OUTmesh, meshConstrained * &OUTMeshC , float& OUTlambda, vec3f& OUTpt) {
+void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, size_t noTrs,meshShaded * &OUTmesh, fragmentProperties &fp) {
 	OUTmesh = nullptr;
-	OUTMeshC = nullptr;
-	OUTlambda = -1;
+	fp.ip.M = nullptr;
+	fp.ip.MC = nullptr;
+	fp.ip.lambda = -1;
 	double tempDist;
+	linearMath::linef ray = (*fp.ray);
 	for (size_t i = 0; i < noTrs; ++i) {
 		
 		if (Mesh[i].colShader->meshVProp == meshVisibilityProperties::inActive) {
@@ -86,7 +83,7 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMat
 
 
 		//check for visibility
-		if (tempDist > 0 && (tempDist < OUTlambda || OUTlambda < 0)) {
+		if (tempDist > 0 && (tempDist < fp.ip.lambda || fp.ip.lambda < 0)) {
 			//check for inside
 			vec3f pt = linearMath::getPt(ray, tempDist);
 			vec3f v = pt - Mesh[i].M.pts[0];
@@ -94,22 +91,19 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, linearMat
 			l2 = vec3f::dot(v, meshC[i].sn) * meshC[i].coordCalcData.x;
 			l1 = (vec3f::dot(v, meshC[i].a) - l2 * meshC[i].coordCalcData.y) * meshC[i].coordCalcData.z;
 			
-			//obsolete used was once used with side planes
-			//if (vec3f::dot(pt - Mesh[i].M.pts[0], meshC[i].sidePlaneNormals[0]) < 0)continue;
-			//if (vec3f::dot(pt - Mesh[i].M.pts[1], meshC[i].sidePlaneNormals[1]) < 0)continue;
-			//if (vec3f::dot(pt - Mesh[i].M.pts[2], meshC[i].sidePlaneNormals[2]) < 0)continue;
-			
-			
 			//inside
 			if (!(l1 > 0))continue;
 			if (!(l2 > 0))continue;
 			if ((l1+l2 > 1))continue;
 
-			OUTlambda = tempDist;
+			fp.ip.lambda = tempDist;
 
-			OUTpt = pt;
-			OUTmesh = Mesh + i;
-			OUTMeshC = meshC + i;
+			fp.ip.pt = pt;
+			OUTmesh = Mesh+i;
+			fp.ip.M = &(Mesh[i].M);
+			fp.ip.MC = meshC + i;
+			fp.ip.cx = l1;
+			fp.ip.cy = l2;
 		}
 	}
 }
@@ -122,15 +116,13 @@ void getIntersections(linearMath::linef* rays, size_t noRays, meshShaded* trs, m
 	fragmentProperties fp;
 	fp.ray = rays + tId;
 	meshShaded* outM;
-	getClosestIntersection(trs, collTrs, *fp.ray, noTrs, outM, fp.ip.MC, fp.ip.lambda, fp.ip.pt);
+	getClosestIntersection(trs, collTrs,noTrs, outM,fp);
 
 	//shade
 	if (outM == nullptr) {
-		fp.ip.M = nullptr;
 		displayData[tId] = (defaultShader)->shade(fp);
 	}
 	else {
-		fp.ip.M = &(outM->M);
 		displayData[tId] = outM->colShader->shade(fp);
 	}
 }

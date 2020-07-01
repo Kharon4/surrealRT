@@ -56,11 +56,10 @@ bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly)
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
 	int x = 720, y = 480;
-	texture tex("res/kharon4.png", commonMemType::both);
+	texture tex("res/kharon4.png", commonMemType::hostOnly);
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
 	w1.update();
-	input::asyncGetch();
 	camera c(vec3f(0, -1, 0), x, y, vec3f(0, 0, 0), vec3f(1, 0, 0), vec3f(0, 0, ((float)y) / x));
 	manipulation3dF::transform t, tDr;
 	t.CS.setOrigin(c.vertex);
@@ -76,15 +75,17 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	color testColor,lightCol;
 	testColor = vec3f(100, 100, 100);
 	lightCol = vec3f(1, 1, 2);
-	shadedSolidColCPU col(testColor, lightCol, vec3f(1, 2, -3));
+	//shadedSolidColCPU col(testColor, lightCol, vec3f(1, 2, -3));
+	texture tex2("res/triangleTexturing.png", commonMemType::both);
+	textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
 	std::cout << "hello\n";
-	std::cout << "size of loadAxisExchange = " << sizeof(loadAxisExchange) << std::endl;
 	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr(),loadAxisExchange::xzy);
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	graphicalWorld world(&temp);
 	
 
+	input::asyncGetch();
 	while (updateCam(t, tDr) && (!w1.isWindowClosed())) {
 		unsigned long long start, uTime;
 		start = input::micros();
