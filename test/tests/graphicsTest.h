@@ -73,9 +73,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	t.addVec(c.sc.screenCenter, &c.sc.screenCenter);
 	tDr.addVec(c.sc.halfRight, &c.sc.halfRight);
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
-	color testColor;
+	color testColor,lightCol;
 	testColor = vec3f(100, 100, 100);
-	shadedSolidColCPU col(testColor, testColor / 500, vec3f(1, 2, 3));
+	lightCol = vec3f(1, 1, 2);
+	shadedSolidColCPU col(testColor, lightCol, vec3f(1, 2, -3));
 	std::cout << "hello\n";
 	std::cout << "size of loadAxisExchange = " << sizeof(loadAxisExchange) << std::endl;
 	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr(),loadAxisExchange::xzy);

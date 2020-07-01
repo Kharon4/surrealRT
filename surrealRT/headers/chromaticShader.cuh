@@ -26,18 +26,37 @@ enum class meshVisibilityProperties : signed char {
 	backActive = 1//dont make -ve
 };
 
+#define noneColor color(0,0,0)
+#define errorColor color(255,0,255)
 
 class chromaticShader {
 public:
 	meshVisibilityProperties meshVProp;
 	__device__ chromaticShader() { meshVProp = meshVisibilityProperties::frontActive; }
 	__device__ ~chromaticShader(){}
-	__device__ virtual color shade(fragmentProperties& sd) { return color{ 0,0,0 }; }
+	__device__ virtual color shade(fragmentProperties& sd) { return noneColor; }
 };
 
 
 
 //more types
+
+class disableShader : public chromaticShader {
+public:
+	__device__ disableShader() { meshVProp = meshVisibilityProperties::inActive; }
+	__device__ ~disableShader() {}
+	__device__ virtual color shade(fragmentProperties& sd) { return errorColor; }
+};
+
+typedef CPUInstanceController<chromaticShader, disableShader> disableShaderCPU;
+
+#ifdef __NVCC__
+int fdisableShader() {
+	disableShaderCPU shader;
+	return (int)shader.getGPUPtr();
+}
+#endif // __NVCC__
+
 
 class solidColor : public chromaticShader {
 public:
