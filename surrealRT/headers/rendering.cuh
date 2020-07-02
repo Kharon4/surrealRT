@@ -45,22 +45,17 @@ private:
 
 	rayMeshData *redundancyData;
 
-	short xBatch, yBatch;
-	short xDoublingNo, yDoublingNo;
+	unsigned short xResReq, yResReq;//res required for doubling to work
+	unsigned short xDoublingIterations, yDoublingIterations;//doubling interations
+	unsigned char xRes, yRes;//actual res
+	unsigned short mulFacX, mulFacY;//2^xDI , 2^yDI
 
 public:
 
-	graphicalWorldADV(commonMemory<meshShaded>* meshPtr , short xBat , short yBat , short xI=1 , short yI=1) {
-		meshS = meshPtr;
-		meshC = new commonMemory<meshConstrained>(meshS->getNoElements(), commonMemType::deviceOnly);
-		xBatch = xBat;
-		yBatch = yBat;
-		xDoublingNo = xI;
-		yDoublingNo = yI;
-	}
+	graphicalWorldADV(commonMemory<meshShaded>* meshPtr, unsigned short xResolution, unsigned short yRessolution, unsigned char xIters = 0, unsigned char yIters = 0);
 
 	void render(camera cam, BYTE* data);
 	void render(camera cam, BYTE* data, std::function<void()> drawCall);
 
-	~graphicalWorldADV() { delete meshC; }
+	~graphicalWorldADV();
 };

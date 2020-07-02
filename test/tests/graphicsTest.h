@@ -56,7 +56,7 @@ bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly)
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
 	int x = 720, y = 480;
-	texture tex("res/kharon4.png", commonMemType::hostOnly);
+	texture tex("res/kharon4_1.png", commonMemType::hostOnly);
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
 	w1.update();

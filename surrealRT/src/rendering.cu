@@ -108,23 +108,29 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, size_t no
 	}
 }
 
+
+__device__ 
+inline void getIntersectionsInternal(linearMath::linef* ray, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* pixelData, chromaticShader* defaultShader) {
+	fragmentProperties fp;
+	fp.ray = ray;
+	meshShaded* outM;
+	getClosestIntersection(trs, collTrs, noTrs, outM, fp);
+
+	//shade
+	if (outM == nullptr) {
+		*pixelData = (defaultShader)->shade(fp);
+	}
+	else {
+		*pixelData = outM->colShader->shade(fp);
+	}
+}
+
 __global__
 void getIntersections(linearMath::linef* rays, size_t noRays, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* displayData, chromaticShader* defaultShader) {
 	size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 	if (tId >= noRays)return;
 
-	fragmentProperties fp;
-	fp.ray = rays + tId;
-	meshShaded* outM;
-	getClosestIntersection(trs, collTrs,noTrs, outM,fp);
-
-	//shade
-	if (outM == nullptr) {
-		displayData[tId] = (defaultShader)->shade(fp);
-	}
-	else {
-		displayData[tId] = outM->colShader->shade(fp);
-	}
+	getIntersectionsInternal(rays + tId, trs, collTrs, noTrs, displayData + tId, defaultShader);
 }
 
 
@@ -248,4 +254,72 @@ void graphicalWorld::copyData(camera cam, BYTE* data) {
 		cpyData(tempData, data, cam);
 		tempData = nullptr;
 	}
+}
+
+
+
+///ADV GRAPHICS WORLD CUDA_functions
+
+namespace ADVRTX {
+	//get intersections only for rays on grid points
+	//rays ptr to all rays
+	//noGPts no of grid points
+	//xbatch , y batch separation between grid points
+	__global__
+	void getIntersections(linearMath::linef* rays, size_t noGPts,unsigned short noXGridPts, unsigned short xBatch , unsigned short yBatch, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* displayData, chromaticShader* defaultShader) {
+		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+		if (tId >= noGPts)return;
+		fragmentProperties fp;
+		fp.ray = rays + tId;
+		meshShaded* outM;
+		getClosestIntersection(trs, collTrs, noTrs, outM, fp);
+
+		//shade
+		if (outM == nullptr) {
+			displayData[tId] = (defaultShader)->shade(fp);
+		}
+		else {
+			displayData[tId] = outM->colShader->shade(fp);
+		}
+	}
+
+}
+
+///ADV GRAPHICS WORLD functions 
+graphicalWorldADV::graphicalWorldADV(commonMemory<meshShaded>* meshPtr, unsigned short xResolution, unsigned short yRessolution, unsigned char xIters, unsigned char yIters) {
+	meshS = meshPtr;
+	meshC = new commonMemory<meshConstrained>(meshS->getNoElements(), commonMemType::deviceOnly);
+	xDoublingIterations = xIters;
+	yDoublingIterations = yIters;
+	xRes = xResolution;
+	yRes = yRessolution;
+
+	//calculate multiplication factor
+	mulFacX = 1;
+	for (unsigned short i = 0; i < xIters; ++i)mulFacX *= 2;
+	mulFacY = 1;
+	for (unsigned short i = 0; i < yIters; ++i)mulFacY *= 2;
+
+	unsigned short rSamplesX = (xRes / mulFacX);
+	if (xRes % mulFacX != 0) rSamplesX++;
+	unsigned short rSamplesY = (yRes / mulFacY);
+	if (yRes % mulFacY != 0) rSamplesY++;
+
+
+	xResReq = rSamplesX * mulFacX + 1;
+	yResReq = rSamplesY * mulFacY + 1;
+
+	cudaMalloc(&redundancyData, sizeof(redundancyData) * xResReq * yResReq);
+}
+
+graphicalWorldADV::~graphicalWorldADV() {
+
+	//delete data created
+	delete meshC;
+	cudaFree(redundancyData);
+}
+
+
+void graphicalWorldADV::render(camera cam, BYTE* data) {
+
 }
