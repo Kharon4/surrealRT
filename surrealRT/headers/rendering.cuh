@@ -39,7 +39,9 @@ public:
 	};
 private:
 
-	colorBYTE* tempData = nullptr;
+	color* tempData = nullptr;
+	linearMath::linef * rays = nullptr;
+	colorBYTE* actualResData = nullptr;
 	commonMemory<meshShaded>* meshS;
 	commonMemory<meshConstrained>* meshC;
 
@@ -47,9 +49,9 @@ private:
 
 	unsigned short xResReq, yResReq;//res required for doubling to work
 	unsigned short xDoublingIterations, yDoublingIterations;//doubling interations
-	unsigned char xRes, yRes;//actual res
+	unsigned short xRes, yRes;//actual res
 	unsigned short mulFacX, mulFacY;//2^xDI , 2^yDI
-
+	unsigned short gridX, gridY;//no initial samples
 public:
 
 	graphicalWorldADV(commonMemory<meshShaded>* meshPtr, unsigned short xResolution, unsigned short yRessolution, unsigned char xIters = 0, unsigned char yIters = 0);

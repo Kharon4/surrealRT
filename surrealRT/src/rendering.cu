@@ -2,6 +2,7 @@
 
 #include <thread>
 
+
 #ifdef __GPUDEBUG
 #include <iostream>
 #endif
@@ -261,38 +262,72 @@ void graphicalWorld::copyData(camera cam, BYTE* data) {
 ///ADV GRAPHICS WORLD CUDA_functions
 
 namespace ADVRTX {
+
+	__global__
+	void initRays(short xResReq,short yResReq,short xRes, short yRes, vec3f vertex, vec3f topLeft, vec3f right, vec3f down, linearMath::linef* rays) {
+		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+		if (tId >= (xResReq * yResReq))return;
+
+		short x, short y;
+		x = tId % xResReq;
+		y = tId / xResReq;
+
+		rays[tId].setRaw_s(vertex, vec3f::subtract(vec3f::add(topLeft, vec3f::add(vec3f::multiply(right, (x + 0.5) / xRes), vec3f::multiply(down, (y + 0.5) / yRes))), vertex));
+	}
+
+
 	//get intersections only for rays on grid points
 	//rays ptr to all rays
-	//noGPts no of grid points
-	//xbatch , y batch separation between grid points
+	//noGPts no of grid points include extra ones
+	//xbatch , x separation between grid points , includeing extra x pt
+	//ybatch , y separation between two grid pts(including the 1 extra pt) * image width
 	__global__
 	void getIntersections(linearMath::linef* rays, size_t noGPts,unsigned short noXGridPts, unsigned short xBatch , unsigned short yBatch, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* displayData, chromaticShader* defaultShader) {
 		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 		if (tId >= noGPts)return;
-		fragmentProperties fp;
-		fp.ray = rays + tId;
-		meshShaded* outM;
-		getClosestIntersection(trs, collTrs, noTrs, outM, fp);
 
-		//shade
-		if (outM == nullptr) {
-			displayData[tId] = (defaultShader)->shade(fp);
-		}
-		else {
-			displayData[tId] = outM->colShader->shade(fp);
-		}
+		unsigned short xCoord = tId % noXGridPts;
+		unsigned short yCoord = tId / noXGridPts;
+
+		tId = xCoord * xBatch + yCoord * yBatch;
+
+		getIntersectionsInternal(rays + tId, trs, collTrs, noTrs, displayData + tId, defaultShader);
+
 	}
+
+
+	__global__
+		void getByteColor(color* data, colorBYTE* dataByte, float min, float delta,unsigned short xRes,unsigned short yRes , unsigned short xReqRes ) {
+		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+		if (tId >= xRes * yRes)return;
+		
+		size_t baseId = (tId / xRes) * xReqRes + (tId % xRes);
+		color rval = data[baseId];
+		rval -= vec3f(min, min, min);
+		rval *= 256 / delta;
+
+		if (rval.x > 255)dataByte[tId].r = 255;
+		else if (rval.x < 0)dataByte[tId].r = 0;
+		else dataByte[tId].r = (unsigned char)rval.x;
+		if (rval.y > 255)dataByte[tId].g = 255;
+		else if (rval.y < 0)dataByte[tId].g = 0;
+		else dataByte[tId].g = (unsigned char)rval.y;
+		if (rval.z > 255)dataByte[tId].b = 255;
+		else if (rval.z < 0)dataByte[tId].b = 0;
+		else dataByte[tId].b = (unsigned char)rval.z;
+	}
+
 
 }
 
 ///ADV GRAPHICS WORLD functions 
-graphicalWorldADV::graphicalWorldADV(commonMemory<meshShaded>* meshPtr, unsigned short xResolution, unsigned short yRessolution, unsigned char xIters, unsigned char yIters) {
+graphicalWorldADV::graphicalWorldADV(commonMemory<meshShaded>* meshPtr, unsigned short xResolution, unsigned short yResolution, unsigned char xIters, unsigned char yIters) {
 	meshS = meshPtr;
 	meshC = new commonMemory<meshConstrained>(meshS->getNoElements(), commonMemType::deviceOnly);
 	xDoublingIterations = xIters;
 	yDoublingIterations = yIters;
 	xRes = xResolution;
-	yRes = yRessolution;
+	yRes = yResolution;
 
 	//calculate multiplication factor
 	mulFacX = 1;
@@ -309,7 +344,21 @@ graphicalWorldADV::graphicalWorldADV(commonMemory<meshShaded>* meshPtr, unsigned
 	xResReq = rSamplesX * mulFacX + 1;
 	yResReq = rSamplesY * mulFacY + 1;
 
+	gridX = rSamplesX + 1;
+	gridY = rSamplesY + 1;
+
+#ifdef __GPUDEBUG
+	std::cout << "actual res   = " << xRes << " , " << yRes << std::endl;
+	std::cout << "required res = " << xResReq << " , " << yResReq << std::endl;
+	std::cout << "grid res     = " << gridX << " , " << gridY << std::endl;
+	std::cout << "m Factors    = " << mulFacX << " , " << mulFacY << std::endl;
+	std::cout << "d iterations = " << xDoublingIterations << " , " << yDoublingIterations << std::endl;
+#endif
+
 	cudaMalloc(&redundancyData, sizeof(redundancyData) * xResReq * yResReq);
+	cudaMalloc(&rays, sizeof(linearMath::linef) * xResReq * yResReq);
+	cudaMalloc(&tempData, sizeof(color) * xResReq * yResReq);
+	cudaMalloc(&actualResData, sizeof(colorBYTE) * xRes * yRes);
 }
 
 graphicalWorldADV::~graphicalWorldADV() {
@@ -317,9 +366,35 @@ graphicalWorldADV::~graphicalWorldADV() {
 	//delete data created
 	delete meshC;
 	cudaFree(redundancyData);
+	cudaFree(rays);
+	cudaFree(tempData);
+	cudaFree(actualResData);
 }
 
 
 void graphicalWorldADV::render(camera cam, BYTE* data) {
+	displayCudaError(0);
+	//init mesh
+	bool updated = false;
+	meshShaded* devPtr = meshS->getDevice(&updated);
+	if (updated) {
+		initMesh << <blockNo(meshS->getNoElements()), threadNo >> > (devPtr, meshC->getDevice(), meshS->getNoElements());
+	}
+	displayCudaError(1);
 
+	//init rays
+	ADVRTX::initRays<<<blockNo(xResReq * yResReq), threadNo >>>(xResReq, yResReq, xRes, yRes, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
+	//skyboxCPU defaultShader(color(0, 0, 128), color(-200, -200, -200), color(150, 0, 0), color(0, 0, 64), color(0, 0, 64), color(0, 0, 64));
+	solidColCPU defaultShader(color(255, 255, 255));
+	displayCudaError(2);
+	//do rtx
+	ADVRTX::getIntersections << <blockNo(gridX * gridY), threadNo >> > (rays, gridX * gridY, gridX, mulFacX, mulFacY * xResReq, meshS->getDevice(), meshC->getDevice(), meshC->getNoElements(), tempData, defaultShader.getGPUPtr());
+	displayCudaError(3);
+	ADVRTX::getByteColor<<<blockNo(xRes*yRes), threadNo >>>(tempData, actualResData, 0, 255, xRes, yRes, xResReq);
+	displayCudaError(4);
+	//copy data
+	cudaDeviceSynchronize();
+	cudaMemcpy(data, actualResData, sizeof(colorBYTE) * xRes * yRes, cudaMemcpyKind::cudaMemcpyDeviceToHost);
+	cudaDeviceSynchronize();
+	displayCudaError(5);
 }
