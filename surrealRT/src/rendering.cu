@@ -51,11 +51,11 @@ void initMesh(meshShaded* Mesh, meshConstrained* meshC, size_t noOfThreads) {
 }
 
 __device__ __host__
-void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, size_t noTrs,meshShaded * &OUTmesh, fragmentProperties &fp) {
-	OUTmesh = nullptr;
+void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, size_t noTrs, fragmentProperties &fp) {
 	fp.ip.M = nullptr;
 	fp.ip.MC = nullptr;
 	fp.ip.lambda = -1;
+	fp.ip.trId = UINT_MAX;
 	double tempDist;
 	linearMath::linef ray = (*fp.ray);
 	for (size_t i = 0; i < noTrs; ++i) {
@@ -97,15 +97,18 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, size_t no
 			if (!(l2 > 0))continue;
 			if ((l1+l2 > 1))continue;
 
+			//write data
 			fp.ip.lambda = tempDist;
-
 			fp.ip.pt = pt;
-			OUTmesh = Mesh+i;
-			fp.ip.M = &(Mesh[i].M);
-			fp.ip.MC = meshC + i;
+			fp.ip.trId = i;
 			fp.ip.cx = l1;
 			fp.ip.cy = l2;
 		}
+	}
+
+	if (fp.ip.trId != UINT_MAX) {
+		fp.ip.M = &(Mesh[fp.ip.trId].M);
+		fp.ip.MC = meshC + fp.ip.trId;
 	}
 }
 
@@ -114,15 +117,14 @@ __device__
 inline void getIntersectionsInternal(linearMath::linef* ray, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* pixelData, chromaticShader* defaultShader) {
 	fragmentProperties fp;
 	fp.ray = ray;
-	meshShaded* outM;
-	getClosestIntersection(trs, collTrs, noTrs, outM, fp);
+	getClosestIntersection(trs, collTrs, noTrs, fp);
 
 	//shade
-	if (outM == nullptr) {
+	if (fp.ip.trId == UINT_MAX) {
 		*pixelData = (defaultShader)->shade(fp);
 	}
 	else {
-		*pixelData = outM->colShader->shade(fp);
+		*pixelData = trs[fp.ip.trId].colShader->shade(fp);
 	}
 }
 
@@ -315,6 +317,12 @@ namespace ADVRTX {
 		if (rval.z > 255)dataByte[tId].b = 255;
 		else if (rval.z < 0)dataByte[tId].b = 0;
 		else dataByte[tId].b = (unsigned char)rval.z;
+	}
+
+
+	__global__
+	void doubleResX() {
+
 	}
 
 

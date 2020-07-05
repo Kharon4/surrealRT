@@ -25,6 +25,8 @@ bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly)
 
 	vec3f displacement(0, 0, 0);
 
+	if (input::isDown[0xA0])mSpeed *= 10;
+
 	if (input::isDown['W'])
 		displacement += vec3f(1, 0, 0);
 	if (input::isDown['S'])
@@ -55,7 +57,7 @@ bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
-	int x = 1920, y = 1080;
+	int x = 720, y = 480;
 	texture tex("res/kharon4_1.png", commonMemType::hostOnly);
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
@@ -76,10 +78,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	testColor = vec3f(100, 100, 100);
 	lightCol = vec3f(1, 1, 2);
 	//shadedSolidColCPU col(testColor, lightCol, vec3f(1, 2, -3));
-	texture tex2("res/triangleTexturing.png", commonMemType::both);
-	textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
+	randomTriangleShaderCPU col(vec3f(255,255,255), vec3f(7,17,18));
+	//texture tex2("res/triangleTexturing.png", commonMemType::both);
+	//textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
 	std::cout << "hello\n";
-	commonMemory<meshShaded> temp = loadModel("res/cube.obj", col.getGPUPtr(), loadAxisExchange::xzy);
+	commonMemory<meshShaded> temp = loadModel("res/graphicsCity.obj", col.getGPUPtr(), loadAxisExchange::xzy);
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	

@@ -12,6 +12,7 @@ struct intersectionParam {
 	vec3f pt;
 	meshConstrained* MC;
 	mesh* M;
+	unsigned int trId;
 };
 
 struct fragmentProperties {
@@ -174,6 +175,34 @@ public:
 typedef CPUInstanceController<chromaticShader, textureShader, colorBYTE*, unsigned short,unsigned  short, short, short, short, short, short, short,float> textureShaderCPU;
 
 DefineForCompilation(textureShaderCPU, unsigned short ui = 15; short i = 0; float f = 1.1; colorBYTE data; textureShaderCPU shader(&data, ui, ui, i, i, i, i, i, i, f);)
+
+
+class randomTriangleShader : public chromaticShader {
+private:
+	vec3f factors;
+	vec3f range;
+public:
+#define randomLargeNo 172.871233
+	__device__ randomTriangleShader(vec3f max, vec3f seed) { range = max; factors = seed; }
+	__device__ ~randomTriangleShader() {}
+
+#ifdef __NVCC__
+	__device__ color shade(fragmentProperties& sd) {
+		color c(sin((sd.ip.trId + factors.x)*randomLargeNo)
+			,	sin((sd.ip.trId + factors.y)*randomLargeNo)
+			,	sin((sd.ip.trId + factors.z)*randomLargeNo));
+
+		c.x *= range.x;
+		c.y *= range.y;
+		c.z *= range.z;
+		return c;
+	}
+#endif
+};
+
+typedef CPUInstanceController<chromaticShader, randomTriangleShader,vec3f,vec3f> randomTriangleShaderCPU;
+
+DefineForCompilation(randomTriangleShaderCPU, vec3f tempf(0, 1, 2); randomTriangleShaderCPU shader(tempf, vec3f(1, 6, 4));)
 
 struct meshShaded {
 	mesh M;
