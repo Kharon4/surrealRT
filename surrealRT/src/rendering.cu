@@ -114,7 +114,7 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, size_t no
 
 
 __device__ 
-inline void getIntersectionsInternal(linearMath::linef* ray, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* pixelData, chromaticShader* defaultShader) {
+inline fragmentProperties getIntersectionsInternal(linearMath::linef* ray, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* pixelData, chromaticShader* defaultShader) {
 	fragmentProperties fp;
 	fp.ray = ray;
 	getClosestIntersection(trs, collTrs, noTrs, fp);
@@ -126,6 +126,7 @@ inline void getIntersectionsInternal(linearMath::linef* ray, meshShaded* trs, me
 	else {
 		*pixelData = trs[fp.ip.trId].colShader->shade(fp);
 	}
+	return fp;
 }
 
 __global__
@@ -284,7 +285,7 @@ namespace ADVRTX {
 	//xbatch , x separation between grid points , includeing extra x pt
 	//ybatch , y separation between two grid pts(including the 1 extra pt) * image width
 	__global__
-	void getIntersections(linearMath::linef* rays, size_t noGPts,unsigned short noXGridPts, unsigned short xBatch , unsigned short yBatch, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* displayData, chromaticShader* defaultShader) {
+	void getIntersections(linearMath::linef* rays, size_t noGPts,unsigned short noXGridPts, unsigned short xBatch , unsigned short yBatch, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, color* displayData, chromaticShader* defaultShader,graphicalWorldADV::rayMeshData * trackingData) {
 		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
 		if (tId >= noGPts)return;
 
@@ -293,8 +294,8 @@ namespace ADVRTX {
 
 		tId = xCoord * xBatch + yCoord * yBatch;
 
-		getIntersectionsInternal(rays + tId, trs, collTrs, noTrs, displayData + tId, defaultShader);
-
+		trackingData[tId].id = getIntersectionsInternal(rays + tId, trs, collTrs, noTrs, displayData + tId, defaultShader).ip.trId;
+		
 	}
 
 
@@ -320,9 +321,85 @@ namespace ADVRTX {
 	}
 
 
+	//current x res do not include the extra grid point at end , y does include that
+	//deltaX is half the x batch size
 	__global__
-	void doubleResX() {
+		void doubleResX(color* data, graphicalWorldADV::rayMeshData* idData, unsigned short xResReqINTOdeltaY, unsigned short currentXRes, unsigned short currentYRes, short deltaX, linearMath::linef* rays, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, chromaticShader* defaultShader) {
+		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+		if (tId >= currentXRes * currentYRes)return;
 
+		unsigned short x = tId % currentXRes;
+		unsigned short y = tId / currentXRes;
+
+		size_t newID = deltaX + x * deltaX * 2 + y * xResReqINTOdeltaY;
+		//check for  linearity
+		if (idData[newID - deltaX].id == idData[newID + deltaX].id) {
+			fragmentProperties fp;
+			fp.camX = x;
+			fp.camY = y;
+			fp.ray = rays + newID;
+			fp.ip.trId = idData[newID - deltaX].id;
+			if (fp.ip.trId == UINT_MAX) {
+				data[newID] = defaultShader->shade(fp);
+			}
+			else {
+				fp.ip.M = &(trs[fp.ip.trId].M);
+				fp.ip.MC = collTrs + fp.ip.trId;
+				fp.ip.lambda = vec3f::dot(fp.ip.M->pts[0] - fp.ray->getPt(), fp.ip.MC->planeNormal) / vec3f::dot(fp.ray->getDr(), fp.ip.MC->planeNormal);
+				fp.ip.pt = fp.ray->getPt() + fp.ip.lambda * fp.ray->getDr();
+
+				vec3f v = fp.ip.pt - fp.ip.M->pts[0];
+				fp.ip.cy = vec3f::dot(v, fp.ip.MC->sn) * fp.ip.MC->coordCalcData.x;
+				fp.ip.cx = (vec3f::dot(v, fp.ip.MC->a) - fp.ip.cy * fp.ip.MC->coordCalcData.y) * fp.ip.MC->coordCalcData.z;
+				data[newID] = trs[fp.ip.trId].colShader->shade(fp);
+			}
+			idData[newID].id = fp.ip.trId;
+		}
+		else {
+			// do full on rtx
+			idData[newID].id = getIntersectionsInternal(rays + newID, trs, collTrs, noTrs, data, defaultShader).ip.trId;
+		}
+	}
+
+
+	//current y res do not include the extra grid point at end , x does include that
+	//deltaY is half the y batch size
+	__global__
+		void doubleResY(color* data, graphicalWorldADV::rayMeshData* idData, unsigned short xResReqINTOdeltaY, unsigned short currentXRes, unsigned short currentYRes, short deltaX, linearMath::linef* rays, meshShaded* trs, meshConstrained* collTrs, size_t noTrs, chromaticShader* defaultShader) {
+		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+		if (tId >= currentXRes * currentYRes)return;
+
+		unsigned short x = tId % currentXRes;
+		unsigned short y = tId / currentXRes;
+
+		size_t newID = deltaX + x * deltaX * 2 + y * xResReqINTOdeltaY;
+		//check for  linearity
+		if (idData[newID - deltaX].id == idData[newID + deltaX].id) {
+			fragmentProperties fp;
+			fp.camX = x;
+			fp.camY = y;
+			fp.ray = rays + newID;
+			fp.ip.trId = idData[newID - deltaX].id;
+			if (fp.ip.trId == UINT_MAX) {
+				data[newID] = defaultShader->shade(fp);
+			}
+			else {
+				fp.ip.M = &(trs[fp.ip.trId].M);
+				fp.ip.MC = collTrs + fp.ip.trId;
+				fp.ip.lambda = vec3f::dot(fp.ip.M->pts[0] - fp.ray->getPt(), fp.ip.MC->planeNormal) / vec3f::dot(fp.ray->getDr(), fp.ip.MC->planeNormal);
+				fp.ip.pt = fp.ray->getPt() + fp.ip.lambda * fp.ray->getDr();
+
+				vec3f v = fp.ip.pt - fp.ip.M->pts[0];
+				fp.ip.cy = vec3f::dot(v, fp.ip.MC->sn) * fp.ip.MC->coordCalcData.x;
+				fp.ip.cx = (vec3f::dot(v, fp.ip.MC->a) - fp.ip.cy * fp.ip.MC->coordCalcData.y) * fp.ip.MC->coordCalcData.z;
+				data[newID] = trs[fp.ip.trId].colShader->shade(fp);
+			}
+			idData[newID].id = fp.ip.trId;
+		}
+		else {
+			// do full on rtx
+			idData[newID].id = getIntersectionsInternal(rays + newID, trs, collTrs, noTrs, data, defaultShader).ip.trId;
+		}
 	}
 
 
@@ -393,11 +470,24 @@ void graphicalWorldADV::render(camera cam, BYTE* data) {
 	//init rays
 	ADVRTX::initRays<<<blockNo(xResReq * yResReq), threadNo >>>(xResReq, yResReq, xRes, yRes, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
 	//skyboxCPU defaultShader(color(0, 0, 128), color(-200, -200, -200), color(150, 0, 0), color(0, 0, 64), color(0, 0, 64), color(0, 0, 64));
-	solidColCPU defaultShader(color(255, 255, 255));
+	solidColCPU defaultShader(color(0, 0, 0));
 	displayCudaError(2);
 	//do rtx
-	ADVRTX::getIntersections << <blockNo(gridX * gridY), threadNo >> > (rays, gridX * gridY, gridX, mulFacX, mulFacY * xResReq, meshS->getDevice(), meshC->getDevice(), meshC->getNoElements(), tempData, defaultShader.getGPUPtr());
+	ADVRTX::getIntersections << <blockNo(gridX * gridY), threadNo >> > (rays, gridX * gridY, gridX, mulFacX, mulFacY * xResReq, meshS->getDevice(), meshC->getDevice(), meshC->getNoElements(), tempData, defaultShader.getGPUPtr() , redundancyData);
 	displayCudaError(3);
+
+	//interpolation
+	unsigned short currentX = gridX - 1;
+	unsigned short currentDelta = mulFacX / 2;
+	for (unsigned short i = 0; i < xDoublingIterations; i++) {
+		
+		ADVRTX::doubleResX<<<blockNo(currentX*gridY),threadNo>>>(tempData, redundancyData, xResReq * mulFacY, currentX, gridY, currentDelta, rays, meshS->getDevice(), meshC->getDevice(), meshC->getNoElements(), defaultShader.getGPUPtr());
+		
+		displayCudaError(3.5); 
+		currentX *= 2;
+		currentDelta /= 2;
+	}
+
 	ADVRTX::getByteColor<<<blockNo(xRes*yRes), threadNo >>>(tempData, actualResData, 0, 255, xRes, yRes, xResReq);
 	displayCudaError(4);
 	//copy data

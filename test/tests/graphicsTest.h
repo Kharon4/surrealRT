@@ -82,12 +82,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	//texture tex2("res/triangleTexturing.png", commonMemType::both);
 	//textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
 	std::cout << "hello\n";
-	commonMemory<meshShaded> temp = loadModel("res/graphicsCity.obj", col.getGPUPtr(), loadAxisExchange::xzy);
+	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr(), loadAxisExchange::xzy);
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	
 	//graphicalWorld world(&temp);
-	graphicalWorldADV world(&temp, x, y,3,3);
+	graphicalWorldADV world(&temp, x, y,3,0);
 
 	input::asyncGetch();
 	while (updateCam(t, tDr) && (!w1.isWindowClosed())) {

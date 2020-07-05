@@ -34,8 +34,7 @@ public:
 class graphicalWorldADV {// with assisted RTX
 public:
 	struct rayMeshData {
-		meshShaded* M;
-		meshConstrained Mc;
+		unsigned int id;
 	};
 private:
 
