@@ -33,6 +33,10 @@ enum class meshVisibilityProperties : signed char {
 
 class chromaticShader {
 public:
+	struct fragmentPropertiesMask {
+		bool globalCoord = false;
+		bool localCoord = false;
+	} shaderMask;
 	meshVisibilityProperties meshVProp;
 	__device__ chromaticShader() { meshVProp = meshVisibilityProperties::frontActive; }
 	__device__ ~chromaticShader(){}
@@ -145,6 +149,7 @@ public:
 	unsigned short textureWidth, textureHeight;
 	float max;
 	__device__ textureShader(colorBYTE* DATA,unsigned short Width,unsigned short Height, short Ox, short Oy, short Xx, short Xy, short Yx, short Yy,float Max) {
+		shaderMask.localCoord = true;
 		data = DATA;
 		ox = Ox; oy = Oy; xx = Xx - Ox; xy = Xy - Oy; yx = Yx - Ox; yy = Yy - Oy;
 		textureWidth = Width; textureHeight = Height; max = Max;

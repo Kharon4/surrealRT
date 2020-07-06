@@ -267,15 +267,15 @@ void graphicalWorld::copyData(camera cam, BYTE* data) {
 namespace ADVRTX {
 
 	__global__
-	void initRays(short xResReq,short yResReq,short xRes, short yRes, vec3f vertex, vec3f topLeft, vec3f right, vec3f down, linearMath::linef* rays) {
+	void initRays(short xResReq,size_t noRays,float xResINV, float yResINV, vec3f vertex, vec3f topLeft, vec3f right, vec3f down, linearMath::linef* rays) {
 		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
-		if (tId >= (xResReq * yResReq))return;
+		if (tId >= (noRays))return;
 
 		short x, short y;
 		x = tId % xResReq;
 		y = tId / xResReq;
 
-		rays[tId].setRaw_s(vertex, vec3f::subtract(vec3f::add(topLeft, vec3f::add(vec3f::multiply(right, (x + 0.5) / xRes), vec3f::multiply(down, (y + 0.5) / yRes))), vertex));
+		rays[tId].setRaw_s(vertex, vec3f::subtract(vec3f::add(topLeft, vec3f::add(vec3f::multiply(right, (x + 0.5) * xResINV), vec3f::multiply(down, (y + 0.5) * yResINV))), vertex));
 	}
 
 
@@ -348,9 +348,11 @@ namespace ADVRTX {
 				fp.ip.lambda = vec3f::dot(fp.ip.M->pts[0] - fp.ray->getPt(), fp.ip.MC->planeNormal) / vec3f::dot(fp.ray->getDr(), fp.ip.MC->planeNormal);
 				fp.ip.pt = fp.ray->getPt() + fp.ip.lambda * fp.ray->getDr();
 
-				vec3f v = fp.ip.pt - fp.ip.M->pts[0];
-				fp.ip.cy = vec3f::dot(v, fp.ip.MC->sn) * fp.ip.MC->coordCalcData.x;
-				fp.ip.cx = (vec3f::dot(v, fp.ip.MC->a) - fp.ip.cy * fp.ip.MC->coordCalcData.y) * fp.ip.MC->coordCalcData.z;
+				if (trs[fp.ip.trId].colShader->shaderMask.localCoord) {
+					vec3f v = fp.ip.pt - fp.ip.M->pts[0];
+					fp.ip.cy = vec3f::dot(v, fp.ip.MC->sn) * fp.ip.MC->coordCalcData.x;
+					fp.ip.cx = (vec3f::dot(v, fp.ip.MC->a) - fp.ip.cy * fp.ip.MC->coordCalcData.y) * fp.ip.MC->coordCalcData.z;
+				}
 				data[newID] = trs[fp.ip.trId].colShader->shade(fp);
 			}
 			idData[newID].id = fp.ip.trId;
@@ -389,9 +391,11 @@ namespace ADVRTX {
 				fp.ip.lambda = vec3f::dot(fp.ip.M->pts[0] - fp.ray->getPt(), fp.ip.MC->planeNormal) / vec3f::dot(fp.ray->getDr(), fp.ip.MC->planeNormal);
 				fp.ip.pt = fp.ray->getPt() + fp.ip.lambda * fp.ray->getDr();
 
-				vec3f v = fp.ip.pt - fp.ip.M->pts[0];
-				fp.ip.cy = vec3f::dot(v, fp.ip.MC->sn) * fp.ip.MC->coordCalcData.x;
-				fp.ip.cx = (vec3f::dot(v, fp.ip.MC->a) - fp.ip.cy * fp.ip.MC->coordCalcData.y) * fp.ip.MC->coordCalcData.z;
+				if (trs[fp.ip.trId].colShader->shaderMask.localCoord) {
+					vec3f v = fp.ip.pt - fp.ip.M->pts[0];
+					fp.ip.cy = vec3f::dot(v, fp.ip.MC->sn) * fp.ip.MC->coordCalcData.x;
+					fp.ip.cx = (vec3f::dot(v, fp.ip.MC->a) - fp.ip.cy * fp.ip.MC->coordCalcData.y) * fp.ip.MC->coordCalcData.z;
+				}
 				data[newID] = trs[fp.ip.trId].colShader->shade(fp);
 			}
 			//data[newID] = errorColor;
@@ -469,7 +473,7 @@ void graphicalWorldADV::render(camera cam, BYTE* data, bool gridOnly) {
 	displayCudaError(1);
 
 	//init rays
-	ADVRTX::initRays<<<blockNo(xResReq * yResReq), threadNo >>>(xResReq, yResReq, xRes, yRes, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
+	ADVRTX::initRays<<<blockNo(xResReq * yResReq), threadNo >>>(xResReq, xResReq * yResReq, 1.0/xRes, 1.0/yRes, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
 	skyboxCPU defaultShader(color(0, 0, 128), color(-200, -200, -200), color(150, 0, 0), color(0, 0, 64), color(0, 0, 64), color(0, 0, 64));
 	//solidColCPU defaultShader(color(0, 0, 0));
 	displayCudaError(2);
@@ -506,7 +510,20 @@ void graphicalWorldADV::render(camera cam, BYTE* data, bool gridOnly) {
 	displayCudaError(4);
 	//copy data
 	cudaDeviceSynchronize();
-	cudaMemcpy(data, actualResData, sizeof(colorBYTE) * xRes * yRes, cudaMemcpyKind::cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	if (data != nullptr) {
+		cudaMemcpy(data, actualResData, sizeof(colorBYTE) * xRes * yRes, cudaMemcpyKind::cudaMemcpyDeviceToHost);
+		cudaDeviceSynchronize();
+	}
 	displayCudaError(5);
+}
+
+
+void graphicalWorldADV::render(camera cam, BYTE* data, std::function<void()> drawCall) {
+	std::thread draw(drawCall);
+	render(cam, nullptr);
+	draw.join();
+	if (data != nullptr) {
+		cudaMemcpy(data, actualResData, sizeof(colorBYTE) * xRes * yRes, cudaMemcpyKind::cudaMemcpyDeviceToHost);
+		cudaDeviceSynchronize();
+	}
 }

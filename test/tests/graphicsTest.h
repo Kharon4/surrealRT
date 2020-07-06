@@ -57,7 +57,7 @@ bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
-	int x = 768, y = 768;
+	int x = 512, y = 512;
 	texture tex("res/kharon4_1.png", commonMemType::hostOnly);
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
@@ -76,9 +76,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	tDr.addVec(c.sc.halfUp, &c.sc.halfUp);
 	color testColor,lightCol;
 	testColor = vec3f(100, 100, 100);
-	lightCol = vec3f(1, 1, 2);
-	//shadedSolidColCPU col(testColor, lightCol, vec3f(1, 2, -3));
-	randomTriangleShaderCPU col(vec3f(255,255,255), vec3f(7,17,18));
+	lightCol = vec3f(1, 1, 2.5);
+	shadedSolidColCPU col(testColor, lightCol, vec3f(1, 2, -3));
+	//randomTriangleShaderCPU col(vec3f(255,255,255), vec3f(7,17,18));
 	//texture tex2("res/triangleTexturing.png", commonMemType::both);
 	//textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
 	std::cout << "hello\n";
@@ -86,8 +86,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	
-	graphicalWorld world(&temp);
-	//graphicalWorldADV world(&temp, x, y,3,3);
+	//graphicalWorld world(&temp);
+	graphicalWorldADV world(&temp, x, y,3,3);
 
 	input::asyncGetch();
 	while (updateCam(t, tDr) && (!w1.isWindowClosed())) {
@@ -95,13 +95,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 		start = input::micros();
 		
 		///multithreader
-		//world.render(c, w1.data, [&w1]() {w1.update(); });
+		world.render(c, w1.data, [&w1]() {w1.update(); });
 		
 		//single threaded
-		world.render(c, w1.data);
+		//world.render(c, w1.data);
 		renderTime = input::micros();
 		
-		w1.update();
+		//w1.update();
 		
 		drawTime = input::micros();
 		std::cout << 1000000.0 / (drawTime - start) << "    Render time = " << renderTime - start <<"    draw time = " << drawTime - renderTime << std::endl;
