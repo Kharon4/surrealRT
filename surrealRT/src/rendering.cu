@@ -357,7 +357,7 @@ namespace ADVRTX {
 		}
 		else {
 			// do full on rtx
-			idData[newID].id = getIntersectionsInternal(rays + newID, trs, collTrs, noTrs, data, defaultShader).ip.trId;
+			idData[newID].id = getIntersectionsInternal(rays + newID, trs, collTrs, noTrs, data + newID, defaultShader).ip.trId;
 		}
 	}
 
@@ -372,14 +372,14 @@ namespace ADVRTX {
 		unsigned short x = tId % currentXRes;
 		unsigned short y = tId / currentXRes;
 
-		size_t newID = deltaX + x * deltaX * 2 + y * xResReqINTOdeltaY;
+		size_t newID = x * deltaX + y * xResReqINTOdeltaY * 2 + xResReqINTOdeltaY;
 		//check for  linearity
-		if (idData[newID - deltaX].id == idData[newID + deltaX].id) {
+		if (idData[newID - xResReqINTOdeltaY].id == idData[newID + xResReqINTOdeltaY].id) {
 			fragmentProperties fp;
 			fp.camX = x;
 			fp.camY = y;
 			fp.ray = rays + newID;
-			fp.ip.trId = idData[newID - deltaX].id;
+			fp.ip.trId = idData[newID - xResReqINTOdeltaY].id;
 			if (fp.ip.trId == UINT_MAX) {
 				data[newID] = defaultShader->shade(fp);
 			}
@@ -394,11 +394,12 @@ namespace ADVRTX {
 				fp.ip.cx = (vec3f::dot(v, fp.ip.MC->a) - fp.ip.cy * fp.ip.MC->coordCalcData.y) * fp.ip.MC->coordCalcData.z;
 				data[newID] = trs[fp.ip.trId].colShader->shade(fp);
 			}
+			//data[newID] = errorColor;
 			idData[newID].id = fp.ip.trId;
 		}
 		else {
 			// do full on rtx
-			idData[newID].id = getIntersectionsInternal(rays + newID, trs, collTrs, noTrs, data, defaultShader).ip.trId;
+			idData[newID].id = getIntersectionsInternal(rays + newID, trs, collTrs, noTrs, data + newID, defaultShader).ip.trId;
 		}
 	}
 
@@ -457,7 +458,7 @@ graphicalWorldADV::~graphicalWorldADV() {
 }
 
 
-void graphicalWorldADV::render(camera cam, BYTE* data) {
+void graphicalWorldADV::render(camera cam, BYTE* data, bool gridOnly) {
 	displayCudaError(0);
 	//init mesh
 	bool updated = false;
@@ -469,25 +470,38 @@ void graphicalWorldADV::render(camera cam, BYTE* data) {
 
 	//init rays
 	ADVRTX::initRays<<<blockNo(xResReq * yResReq), threadNo >>>(xResReq, yResReq, xRes, yRes, cam.vertex, cam.sc.screenCenter - cam.sc.halfRight + cam.sc.halfUp, cam.sc.halfRight * 2, cam.sc.halfUp * -2, rays);
-	//skyboxCPU defaultShader(color(0, 0, 128), color(-200, -200, -200), color(150, 0, 0), color(0, 0, 64), color(0, 0, 64), color(0, 0, 64));
-	solidColCPU defaultShader(color(0, 0, 0));
+	skyboxCPU defaultShader(color(0, 0, 128), color(-200, -200, -200), color(150, 0, 0), color(0, 0, 64), color(0, 0, 64), color(0, 0, 64));
+	//solidColCPU defaultShader(color(0, 0, 0));
 	displayCudaError(2);
 	//do rtx
 	ADVRTX::getIntersections << <blockNo(gridX * gridY), threadNo >> > (rays, gridX * gridY, gridX, mulFacX, mulFacY * xResReq, meshS->getDevice(), meshC->getDevice(), meshC->getNoElements(), tempData, defaultShader.getGPUPtr() , redundancyData);
 	displayCudaError(3);
 
 	//interpolation
-	unsigned short currentX = gridX - 1;
-	unsigned short currentDelta = mulFacX / 2;
-	for (unsigned short i = 0; i < xDoublingIterations; i++) {
-		
-		ADVRTX::doubleResX<<<blockNo(currentX*gridY),threadNo>>>(tempData, redundancyData, xResReq * mulFacY, currentX, gridY, currentDelta, rays, meshS->getDevice(), meshC->getDevice(), meshC->getNoElements(), defaultShader.getGPUPtr());
-		
-		displayCudaError(3.5); 
-		currentX *= 2;
-		currentDelta /= 2;
-	}
+	if(!gridOnly){
+		unsigned short currentX = gridX - 1;
+		unsigned short currentDelta = mulFacX / 2;
+		for (unsigned short i = 0; i < xDoublingIterations; i++) {
 
+			ADVRTX::doubleResX << <blockNo(currentX * gridY), threadNo >> > (tempData, redundancyData, xResReq * mulFacY, currentX, gridY, currentDelta, rays, meshS->getDevice(), meshC->getDevice(), meshC->getNoElements(), defaultShader.getGPUPtr());
+
+			displayCudaError(3.5);
+			currentX *= 2;
+			currentDelta /= 2;
+		}
+
+		unsigned short currentY = gridY - 1;
+		currentDelta = mulFacY / 2;
+		for (unsigned short i = 0; i < yDoublingIterations; i++) {
+
+			ADVRTX::doubleResY << <blockNo(currentY * xResReq), threadNo >> > (tempData, redundancyData, xResReq * currentDelta, xResReq, currentY, 1, rays, meshS->getDevice(), meshC->getDevice(), meshC->getNoElements(), defaultShader.getGPUPtr());
+
+			displayCudaError(3.5);
+			currentY *= 2;
+			currentDelta /= 2;
+		}
+	}
+	
 	ADVRTX::getByteColor<<<blockNo(xRes*yRes), threadNo >>>(tempData, actualResData, 0, 255, xRes, yRes, xResReq);
 	displayCudaError(4);
 	//copy data

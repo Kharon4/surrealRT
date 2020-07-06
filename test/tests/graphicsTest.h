@@ -57,7 +57,7 @@ bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly)
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow) {
 	enableConsole();
-	int x = 720, y = 480;
+	int x = 768, y = 768;
 	texture tex("res/kharon4_1.png", commonMemType::hostOnly);
 	window w1(hInstance, nCmdShow, L"surrealRT", x, y);
 	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
@@ -82,12 +82,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	//texture tex2("res/triangleTexturing.png", commonMemType::both);
 	//textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
 	std::cout << "hello\n";
-	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr(), loadAxisExchange::xzy);
+	commonMemory<meshShaded> temp = loadModel("res/UVSphere.obj", col.getGPUPtr(), loadAxisExchange::xzy);
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	
-	//graphicalWorld world(&temp);
-	graphicalWorldADV world(&temp, x, y,3,0);
+	graphicalWorld world(&temp);
+	//graphicalWorldADV world(&temp, x, y,3,3);
 
 	input::asyncGetch();
 	while (updateCam(t, tDr) && (!w1.isWindowClosed())) {

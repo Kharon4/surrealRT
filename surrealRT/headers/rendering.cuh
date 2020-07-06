@@ -55,7 +55,7 @@ public:
 
 	graphicalWorldADV(commonMemory<meshShaded>* meshPtr, unsigned short xResolution, unsigned short yRessolution, unsigned char xIters = 0, unsigned char yIters = 0);
 
-	void render(camera cam, BYTE* data);
+	void render(camera cam, BYTE* data , bool gridOnly = false);
 	void render(camera cam, BYTE* data, std::function<void()> drawCall);
 
 	~graphicalWorldADV();
