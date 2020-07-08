@@ -21,11 +21,29 @@ struct fragmentProperties {
 	intersectionParam ip;
 };
 
+/*
 enum class meshVisibilityProperties : signed char {
 	inActive = 0,
 	frontActive = -1,//dont make +ve
 	frontBackActive = 2,
 	backActive = 1//dont make -ve
+};
+*/
+
+class meshVisibilityProperties {
+private:
+	unsigned char data = 0;
+public:
+	enum class bitNames :unsigned char {
+		frontVisible = 0,
+		backVisible = 1,
+		triangle = 2 //if not considered parallelogram 
+	};
+	__device__ __host__ meshVisibilityProperties() { data = 0; }
+	__device__ __host__ inline bool getBit(bitNames bit) { return (bool)(data & (1 << (unsigned char)bit)); }
+	__device__ __host__ inline void setBit(bitNames bit) { data |= (1 << (unsigned char)bit); }
+	__device__ __host__ inline void resetBit(bitNames bit) { data &= (~(1 << (unsigned char)bit)); }
+	__device__ __host__ inline void toggleBit(bitNames bit){ data ^= (1 << (unsigned char)bit);}
 };
 
 #define noneColor color(0,0,0)
@@ -38,7 +56,8 @@ public:
 		bool localCoord = false;
 	} shaderMask;
 	meshVisibilityProperties meshVProp;
-	__device__ chromaticShader() { meshVProp = meshVisibilityProperties::frontActive; }
+	__device__ chromaticShader() {	meshVProp.setBit(meshVisibilityProperties::bitNames::frontVisible);
+									meshVProp.setBit(meshVisibilityProperties::bitNames::backVisible);}
 	__device__ ~chromaticShader(){}
 	__device__ virtual color shade(fragmentProperties& sd) { return noneColor; }
 };
@@ -60,7 +79,7 @@ return shader.getGPUPtr();\
 
 class disableShader : public chromaticShader {
 public:
-	__device__ disableShader() { meshVProp = meshVisibilityProperties::inActive; }
+	__device__ disableShader() { meshVProp.resetBit(meshVisibilityProperties::bitNames::frontVisible); }
 	__device__ ~disableShader() {}
 	__device__ virtual color shade(fragmentProperties& sd) { return errorColor; }
 };

@@ -77,12 +77,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	color testColor,lightCol;
 	testColor = vec3f(100, 100, 100);
 	lightCol = vec3f(1, 1, 2.5);
-	shadedSolidColCPU col(testColor, lightCol, vec3f(1, 2, -3));
+	//shadedSolidColCPU col(testColor, lightCol, vec3f(1, 2, -3));
 	//randomTriangleShaderCPU col(vec3f(255,255,255), vec3f(7,17,18));
-	//texture tex2("res/triangleTexturing.png", commonMemType::both);
-	//textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
+	texture tex2("res/triangleTexturing.png", commonMemType::both);
+	textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
 	std::cout << "hello\n";
-	commonMemory<meshShaded> temp = loadModel("res/UVSphere.obj", col.getGPUPtr(), loadAxisExchange::xzy);
+	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr(), loadAxisExchange::xzy);
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	

@@ -60,25 +60,20 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, size_t no
 	linearMath::linef ray = (*fp.ray);
 	for (size_t i = 0; i < noTrs; ++i) {
 		
-		if (Mesh[i].colShader->meshVProp == meshVisibilityProperties::inActive) {
-			tempDist = -1;
+		
+		bool calc = false;
+		float dotCalculated = vec3f::dot(ray.getDr(), meshC[i].planeNormal);
+		if (Mesh[i].colShader->meshVProp.getBit(meshVisibilityProperties::bitNames::frontVisible)) {
+			if (dotCalculated > 0)calc = true;
+		}
+		if (Mesh[i].colShader->meshVProp.getBit(meshVisibilityProperties::bitNames::backVisible)) {
+			if (dotCalculated < 0)calc = true;
+		}
+		if (calc) {
+			tempDist = vec3f::dot(Mesh[i].M.pts[0] - ray.getPt(), meshC[i].planeNormal) / dotCalculated;
 		}
 		else {
-			bool calc = false;
-			float dotCalculated = vec3f::dot(ray.getDr(), meshC[i].planeNormal);
-			if (Mesh[i].colShader->meshVProp == meshVisibilityProperties::frontBackActive) {
-				if (dotCalculated != 0)calc = true;
-			}
-			else {
-				if (dotCalculated * (signed char)Mesh[i].colShader->meshVProp < 0)calc = true;
-			}
-
-			if (calc) {
-				tempDist = vec3f::dot(Mesh[i].M.pts[0] - ray.getPt(), meshC[i].planeNormal) / dotCalculated;
-			}
-			else {
-				tempDist = -1;
-			}
+			tempDist = -1;
 		}
 		
 
@@ -95,8 +90,12 @@ void getClosestIntersection(meshShaded * Mesh ,meshConstrained* meshC, size_t no
 			//inside
 			if (!(l1 > 0))continue;
 			if (!(l2 > 0))continue;
-			if ((l1+l2 > 1))continue;
-
+			if (Mesh[i].colShader->meshVProp.getBit(meshVisibilityProperties::bitNames::triangle)) {
+				if ((l1 + l2 > 1))continue;
+			}
+			else {
+				if ((l1 > 1) || (l2 > 1))continue;
+			}
 			//write data
 			fp.ip.lambda = tempDist;
 			fp.ip.pt = pt;
@@ -269,6 +268,7 @@ namespace ADVRTX {
 	__global__
 	void initRays(short xResReq,size_t noRays,float xResINV, float yResINV, vec3f vertex, vec3f topLeft, vec3f right, vec3f down, linearMath::linef* rays) {
 		size_t tId = threadIdx.x + blockIdx.x * blockDim.x;
+
 		if (tId >= (noRays))return;
 
 		short x, short y;
