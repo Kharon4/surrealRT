@@ -57,7 +57,7 @@ public:
 	} shaderMask;
 	meshVisibilityProperties meshVProp;
 	__device__ chromaticShader() {	meshVProp.setBit(meshVisibilityProperties::bitNames::frontVisible);
-									meshVProp.setBit(meshVisibilityProperties::bitNames::backVisible);}
+									meshVProp.setBit(meshVisibilityProperties::bitNames::triangle);}
 	__device__ ~chromaticShader(){}
 	__device__ virtual color shade(fragmentProperties& sd) { return noneColor; }
 };

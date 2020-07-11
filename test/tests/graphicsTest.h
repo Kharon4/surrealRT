@@ -1,15 +1,13 @@
 #pragma once
 #include <iostream>
 
-#define math3D_DeclrationOnly 1
-
 #include "win32WindowingSystem.h"
 #include "rendering.cuh"
 #include "parsing/parsingAlgos/obj.h"
 #include "parsing/classes/texture.h"
+#include "transform.cuh"
 
-
-bool updateCam(manipulation3dF::transform& t, manipulation3dF::transform& rOnly) {
+bool updateCam(manipulation3d::transformf& t, manipulation3d::transformf& rOnly) {
 	float rSpeed = -0.05;
 	float mSpeed = 2;
 
@@ -63,12 +61,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	tex.copyToBuffer((colorBYTE*)w1.data, x, y);
 	w1.update();
 	camera c(vec3f(0, -1, 0), x, y, vec3f(0, 0, 0), vec3f(1, 0, 0), vec3f(0, 0, ((float)y) / x));
-	manipulation3dF::transform t, tDr;
+	manipulation3d::transformf t, tDr;
 	t.CS.setOrigin(c.vertex);
 	t.CS.setScale(vec3f(1, 1, 1));
-	t.CS.setAngle(vec3f(pi / 2, 0, 0));
+	t.CS.setAngle(vec3f(math3D_pi / 2, 0, 0));
 	tDr.CS.setScale(vec3f(1, 1, 1));
-	tDr.CS.setAngle(vec3f(pi / 2, 0, 0));
+	tDr.CS.setAngle(vec3f(math3D_pi / 2, 0, 0));
 
 	t.addVec(c.vertex, &c.vertex);
 	t.addVec(c.sc.screenCenter, &c.sc.screenCenter);
@@ -82,7 +80,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	texture tex2("res/triangleTexturing.png", commonMemType::both);
 	textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
 	std::cout << "hello\n";
-	commonMemory<meshShaded> temp = loadModel("res/icoSphere.obj", col.getGPUPtr(), loadAxisExchange::xzy);
+	commonMemory<meshShaded> temp = loadModel("res/monkey.obj", col.getGPUPtr(), loadAxisExchange::xzy);
 	//loaded
 	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
 	
