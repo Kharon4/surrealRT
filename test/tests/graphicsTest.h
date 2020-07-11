@@ -7,12 +7,13 @@
 #include "parsing/classes/texture.h"
 #include "transform.cuh"
 
-bool updateCam(manipulation3d::transformf& t, manipulation3d::transformf& rOnly) {
+bool updateCam(manipulation3d::transformf& t, manipulation3d::transformf& rOnly, bool & fpsDebug) {
 	float rSpeed = -0.05;
 	float mSpeed = 2;
 
 	input::update();
 	if (input::isDown['X'])return false;
+	if (input::pressed['F'])fpsDebug = (!fpsDebug);
 	if (input::pressed['M']) {
 		input::lock = !input::lock;
 		if (input::lock);
@@ -88,7 +89,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	graphicalWorldADV world(&temp, x, y,3,3);
 
 	input::asyncGetch();
-	while (updateCam(t, tDr) && (!w1.isWindowClosed())) {
+
+	bool fpsOut = false;
+	while (updateCam(t, tDr,fpsOut) && (!w1.isWindowClosed())) {
 		unsigned long long start, renderTime, drawTime;
 		start = input::micros();
 		
@@ -102,6 +105,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 		//w1.update();
 		
 		drawTime = input::micros();
+		if(fpsOut)
 		std::cout << 1000000.0 / (drawTime - start) << "    Render time = " << renderTime - start <<"    draw time = " << drawTime - renderTime << std::endl;
 	}
 

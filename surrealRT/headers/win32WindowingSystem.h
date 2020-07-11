@@ -31,7 +31,7 @@ public:
 
 	void draw();//non time consuming
 
-	void update();//time consuming
+	void update(bool DRAW = false);//time consuming
 
 
 	bool  isWindowClosed();

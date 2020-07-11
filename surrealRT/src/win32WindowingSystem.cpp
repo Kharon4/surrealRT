@@ -178,7 +178,7 @@ void window::draw() {
 	ReleaseDC(windowHandle, hdc);
 }
 
-void window::update() {
+void window::update(bool DRAW) {
 	//bitmap with the data
 	//Gdiplus::Bitmap bmp(x, y, 4 * ((x * 24 + 31) / 32), PixelFormat24bppRGB, data);//
 	Gdiplus::Bitmap bmp(x, y, x*4, PixelFormat32bppRGB, data);//
@@ -194,7 +194,7 @@ void window::update() {
 	sHBMP = dHBMP;
 	dHBMP = tempPtr;
 	drawLock.unlock();
-	draw();
+	if(DRAW)draw();
 }
 
 POINT window::GlobalToScreen(POINT global) { ScreenToClient(windowHandle, &global); return global; }
