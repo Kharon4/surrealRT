@@ -78,3 +78,41 @@ commonMemory<meshShaded> loadModel(std::string fileNameWithExtension,chromaticSh
 	}
 	return rVal;
 }
+
+
+void loadModelVertices(std::vector<vec3d>& OUTdata, std::istream& f, loadAxisExchange vertexAxis) {
+	OUTdata.resize(0);
+	while (!f.eof()) {
+		string line;
+		f >> line;
+
+		if (line == "v") {
+			vec3f vertex;
+			switch (vertexAxis)
+			{
+			case loadAxisExchange::xyz:
+				f >> vertex.x >> vertex.y >> vertex.z;
+				break;
+			case loadAxisExchange::xzy:
+				f >> vertex.x >> vertex.z >> vertex.y;
+				break;
+			case loadAxisExchange::yxz:
+				f >> vertex.y >> vertex.x >> vertex.z;
+				break;
+			case loadAxisExchange::yzx:
+				f >> vertex.y >> vertex.z >> vertex.x;
+				break;
+			case loadAxisExchange::zxy:
+				f >> vertex.z >> vertex.x >> vertex.y;
+				break;
+			case loadAxisExchange::zyx:
+				f >> vertex.z >> vertex.y >> vertex.x;
+				break;
+			default:
+				//throw error
+				break;
+			}
+			OUTdata.push_back(vertex);
+		}
+	}
+}

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\parsing\classes\polynomialMesh.cpp" />
     <ClCompile Include="src\parsing\classes\texture.cpp" />
     <ClCompile Include="src\parsing\parsingAlgos\obj.cpp" />
     <ClCompile Include="src\win32WindowingSystem.cpp" />
@@ -34,6 +35,7 @@
     <ClInclude Include="headers\GlobalGPUDefsConstants.cuh" />
     <ClInclude Include="headers\GPUInstantiator.cuh" />
     <ClInclude Include="headers\mesh.h" />
+    <ClInclude Include="headers\parsing\classes\polynomialMesh.h" />
     <ClInclude Include="headers\parsing\classes\texture.h" />
     <ClInclude Include="headers\parsing\parsingAlgos\obj.h" />
     <ClInclude Include="headers\rendering.cuh" />

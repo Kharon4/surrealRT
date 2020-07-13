@@ -32,5 +32,8 @@
     <ClInclude Include="tests\textureClassMemCheck.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tests\polynomialMeshTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

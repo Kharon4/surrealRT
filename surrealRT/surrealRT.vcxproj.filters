@@ -24,6 +24,9 @@
     <ClCompile Include="src\parsing\classes\texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\parsing\classes\polynomialMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="headers\color.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="headers\parsing\classes\polynomialMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

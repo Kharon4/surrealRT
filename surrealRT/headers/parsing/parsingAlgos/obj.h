@@ -4,6 +4,7 @@
 #include "cudaRelated/commonMemory.cuh"
 
 #include <string>
+#include <vector>
 
 enum class loadAxisExchange : unsigned char
 {
@@ -16,3 +17,6 @@ enum class loadAxisExchange : unsigned char
 };
 
 commonMemory<meshShaded> loadModel(std::string fileNameWithExtension, chromaticShader* shader, loadAxisExchange vertexAxis = loadAxisExchange::xyz);
+
+
+void loadModelVertices(std::vector<vec3d>& OUTdata, std::istream& f, loadAxisExchange vertexAxis = loadAxisExchange::xyz);
