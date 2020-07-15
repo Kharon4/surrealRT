@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <vector>
 #include "vec3.cuh"
 
@@ -10,5 +11,5 @@ private:
 	unsigned int zCoeff = 0;
 public:
 	polynomialMesh(std::vector<vec3d>& vertices);
-
+	void displayEqn(std::ostream& f = std::cout);
 };

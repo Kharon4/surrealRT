@@ -33,6 +33,23 @@ size_t commonMemory<T>::getNoElements() {
 }
 
 template <typename T>
+void commonMemory<T>::changeNoElements(size_t Size) {
+	if (hostPtr != nullptr)delete[] hostPtr;
+	if (devicePtr != nullptr)cudaFree(devicePtr);
+
+	noElements = Size;
+	size = sizeof(T) * Size;
+	
+	if (size == 0)return;
+
+	if (type != commonMemType::deviceOnly)
+		hostPtr = new unsigned char[size];
+
+	if (type != commonMemType::hostOnly)
+		cudaMalloc(&devicePtr, size);
+}
+
+template <typename T>
 T* commonMemory<T>::getHost(bool* OUTupdated) {
 	if (OUTupdated != nullptr)*OUTupdated = false;
 
@@ -191,5 +208,4 @@ template <typename T>
 commonMemory<T>::~commonMemory() {
 	if (hostPtr != nullptr)delete[] hostPtr;
 	if (devicePtr != nullptr)cudaFree(devicePtr);
-
 }

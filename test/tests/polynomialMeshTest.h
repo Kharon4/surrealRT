@@ -11,11 +11,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	enableConsole();
 	
 	std::vector<vec3d> rVal;
-	std::ifstream file("res/icoSphere.obj");
+	std::ifstream file("res/cube.obj");
 	
 	loadModelVertices(rVal, file);
 	cout << rVal.size() << endl;
 	polynomialMesh mesh(rVal);
+	cout <<"eqn :"<< endl;
+	mesh.displayEqn();
+	cout << endl << endl;
 	system("pause");
 	return 0;
 }

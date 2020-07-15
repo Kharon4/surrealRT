@@ -81,9 +81,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE, PWSTR pCmdLine, int nCmdShow
 	texture tex2("res/triangleTexturing.png", commonMemType::both);
 	textureShaderCPU col(tex2.getDevicePtr(), tex2.getWidth(), tex2.getHeight(), 0, 0, tex2.getWidth(), 0, 0, tex2.getHeight(),1);
 	std::cout << "hello\n";
-	commonMemory<meshShaded> temp = loadModel("res/monkey.obj", col.getGPUPtr(), loadAxisExchange::xzy);
+	commonMemory<meshShaded> temp(1500);
+	loadBlankModel(temp.getHost(), temp.getNoElements());
+	long int facesLoaded = loadModel(temp.getHost(),temp.getNoElements(),"res/monkey.obj", col.getGPUPtr(), loadAxisExchange::xzy);
+	facesLoaded += loadModel(temp.getHost() + facesLoaded, temp.getNoElements() - facesLoaded, "res/cube.obj", col.getGPUPtr(),loadAxisExchange::xzy);
 	//loaded
-	std::cout << "no faces loaded = " << temp.getNoElements() << std::endl;
+	std::cout << "no faces loaded = " << facesLoaded<<" / "<<temp.getNoElements() << std::endl;
 	
 	//graphicalWorld world(&temp);
 	graphicalWorldADV world(&temp, x, y,3,3);

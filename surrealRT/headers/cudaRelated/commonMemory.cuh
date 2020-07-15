@@ -19,6 +19,7 @@ public:
 	commonMemory(size_t Size = 1, commonMemType Type = commonMemType::both);//size is the no of elements
 
 	size_t getNoElements();
+	void changeNoElements(size_t Size);//does not retain any data
 
 	T* getHost(bool* OUTupdated = nullptr);//OUTupdated = true when data is copied
 	T* getDevice(bool* OUTupdated = nullptr);//OUTupdated = true when data is copied

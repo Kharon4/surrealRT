@@ -16,7 +16,13 @@ enum class loadAxisExchange : unsigned char
 	zyx = 5
 };
 
+//returns commonMem allocated on bots host & device
 commonMemory<meshShaded> loadModel(std::string fileNameWithExtension, chromaticShader* shader, loadAxisExchange vertexAxis = loadAxisExchange::xyz);
 
+//host only function
+//returns no meshShaded loaded , if -ve , function failed , the -ve val is baffMaxSize - Actaul size
+long int loadModel(meshShaded* OUTBuff, unsigned int buffMaxSize, std::string fileNameWithExtension, chromaticShader* shader, loadAxisExchange vertexAxis = loadAxisExchange::xyz);
+
+void loadBlankModel(meshShaded* OUTBuff, unsigned int buffMaxSize);//dissable shader
 
 void loadModelVertices(std::vector<vec3d>& OUTdata, std::istream& f, loadAxisExchange vertexAxis = loadAxisExchange::xyz);
